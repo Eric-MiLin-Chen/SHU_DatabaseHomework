@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小选课系统，大师作</title>
+    <link rel="stylesheet" href="./css/all.css">
+    <link rel="stylesheet" href="./css/login.css">
+    <link rel="stylesheet" href="./css/semester.css">
+    <link rel="stylesheet" href="./css/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-frame">
+        <div class="login-frame-red">
+            <div class="login-box">
+                <div class="login-title">
+                    <p>登录</p>
+                    <p>您正在登录选课系统</p>
+                </div>
+                <div class="login-input">
+                    <div class="login-username">
+                        <input type="text" placeholder="请输入用户名" id="username">
+                    </div>
+                    <div class="login-password">
+                        <input type="password" placeholder="请输入密码" id="password">
+                    </div>
+                </div>
+                <div class="login-button">
+                    <button id="login-submit">登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="semester-frame" style="display: none;">
+        <div class="semester-box">
+            <div class="semester-title">
+                <h4>
+                    学期选择
+                </h4>
+            </div>
+            <div class="semester-input">
+                <p>点击选择选课学期</p>
+                <div class="semester-username">
+                    <input type="text" placeholder="请输入学期" id="semester">
+                </div>
+            </div>
+            <div class="semester-button">
+                <button id="semester-submit">确定</button>
+            </div>
+        </div>
+    </div>
+    <div class="main-frame" style="display: none;">
+        <nav class="nav-box">
+            <ul class="nav-box-ul">
+                <li class="nav-question">
+                    选课问题咨询解答
+                </li>
+                <li class="nav-no">
+                    22222222
+                </li>
+                <li class="nav-logout">
+                    安全退出
+                </li>
+            </ul>
+
+        </nav>
+        <aside class="aside-box">
+            <div class="aside-sinfo">
+                <h1>学生信息</h1>
+                <p>学号：<span id="sno"></span></p>
+                <p>姓名：<span id="sname"></span></p>
+                <p>英语等级：<span id="sEnglishGrade"></span></p>
+                <p>上学期平均绩点：<span id="sLastAvgPoint"></span></p>
+                <p id="redlogout" style="cursor: pointer;color: red;"><strong>完成选课后点击【安全退出】</strong></p>
+            </div>
+            <div class="aside-menu">
+                <div class="menu-main">&ensp;主菜单</div>
+                <div class="menu-student" style="display: none;">
+                    <div id="menu-student-title">&ensp;学生用户<span
+                            style="float: right;transform: scale(1.2,0.6) translateY(1vh);">V&ensp;</span>
+                    </div>
+                    <ul class="menu-select">
+                        <li id="student-select"><a>选课课程查询</a></li>
+                        <li id="student-drop"><a>退课</a></li>
+                        <li id="student-scheduleInquiry"><a>课表查询</a></li>
+                    </ul>
+                    <div class="menu-mask"></div>
+                </div>
+                <div class="menu-teacher" style="display: none;">
+                    <div id="menu-teacher-title">&ensp;教师用户<span
+                            style="float: right;transform: scaleX(2);">V&ensp;</span>
+                    </div>
+                    <ul class="menu-select">
+                        <li id="teacher-scheduleInquiry"><a>课表查询</a></li>
+                    </ul>
+                    <div class="menu-mask"></div>
+                </div>
+                <div class="menu-admin" style="display:none;">
+                    <div id="menu-admin-title">&ensp;管理员用户<span
+                            style="float: right;transform: scaleX(2);">V&ensp;</span>
+                    </div>
+                    <ul class="menu-select">
+                        <li id="admin-alter-course"><a>增删查改课程</a></li>
+                        <li id="admin-alter-student"><a>增删查改学生</a></li>
+                        <li id="admin-alter-sc"><a>增删查改学生选择课程</a></li>
+                    </ul>
+                    <div class="menu-mask"></div>
+                </div>
+            </div>
+        </aside>
+        <article class="article-box">
+
+        </article>
+        <footer class="footer-box">
+            <div class="footer-text">
+                <p>技术支持：第八组</p>
+            </div>
+        </footer>
+    </div>
+</body>
+<script src="./js/main.js"></script>
+
+</html>

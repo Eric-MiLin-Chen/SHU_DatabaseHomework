@@ -27,3 +27,13 @@
 5. 课表库E
    学号、课程号、教师工号
 
+### 前后端json数据语法
+
+| 属性        | 内容类型 | 内容            | 描述 |
+| ----------- | -------- | --------------- | ---- |
+| username    | char     |                 |      |
+| password    | char     |                 |      |
+| loginstatus | char     | success\|failed |      |
+| userinfo    | dict     |                 |      |
+|             |          |                 |      |
+
