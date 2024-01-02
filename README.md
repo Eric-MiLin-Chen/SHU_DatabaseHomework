@@ -36,4 +36,11 @@
 | password    | char     |                 |      |
 | loginstatus | char     | success\|failed |      |
 | userinfo    | dict     |                 |      |
-|             |          |                 |      |
+| token       | char     |                 |      |
+| kch         | char     |                 |      |
+| kcm         | char     |                 |      |
+| xf          | char     |                 |      |
+| jsh         | char     |                 |      |
+| jsxm        | char     |                 |      |
+| sksj        | char     |                 |      |
+| message     | char     |                 |      |
