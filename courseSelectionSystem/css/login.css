@@ -20,7 +20,7 @@
 .login-frame .login-box {
     width: 360px;
     height: 294px;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 1);
     position: absolute;
     top: 15%;
     right: 25%;
@@ -28,7 +28,7 @@
     flex-direction: column;
     text-align: start;
     border-top: var(--maincolor) solid 0.5vw;
-    transform: skewX(5deg);
+    /* transform: skewX(5deg); */
 
 }
 

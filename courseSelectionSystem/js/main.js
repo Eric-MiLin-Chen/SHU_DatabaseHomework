@@ -2,27 +2,6 @@
 document.getElementById("login-submit").onclick = function () {
     var username = document.getElementById("username").value;
     document.getElementsByClassName("nav-no")[0].innerHTML = username;
-    let pattern2=/^2[0-9]{7}/;
-    let pattern1=/^1[0-9]{7}/;
-    let pattern0=/^0[0-9]{7}/;
-    if (pattern2.test(username)) {
-        document.getElementsByClassName("login-frame")[0].style.display = "none";
-        document.getElementsByClassName("semester-frame")[0].style.display = "block";
-        document.getElementsByClassName("menu-student")[0].style.display = "block";
-        return;
-    }
-    if (pattern1.test(username)) {
-        document.getElementsByClassName("login-frame")[0].style.display = "none";
-        document.getElementsByClassName("semester-frame")[0].style.display = "block";
-        document.getElementsByClassName("menu-teacher")[0].style.display = "block";
-        return;
-    }
-    if (pattern0.test(username)) {
-        document.getElementsByClassName("login-frame")[0].style.display = "none";
-        document.getElementsByClassName("semester-frame")[0].style.display = "block";
-        document.getElementsByClassName("menu-admin")[0].style.display = "block";
-        return;
-    }
     var password = document.getElementById("password").value;
     var data = {
         username: username,
@@ -35,7 +14,7 @@ document.getElementById("login-submit").onclick = function () {
     xhr.send(dataStr);
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
-            var res = JSON.parse(xhr.responseText);
+            var res = xhr.responseText;
             if (res == "success") {
                 document.getElementsByClassName("login-frame")[0].style.display = "none";
                 document.getElementsByClassName("semester-frame")[0].style.display = "block";
