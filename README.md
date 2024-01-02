@@ -30,17 +30,18 @@
 
 ### 前后端json数据语法
 
-| 属性        | 内容类型 | 内容            | 描述 |
-| ----------- | -------- | --------------- | ---- |
-| username    | char     |                 |      |
-| password    | char     |                 |      |
-| loginstatus | char     | success\|failed |      |
-| userinfo    | dict     |                 |      |
-| token       | char     |                 |      |
-| kch         | char     |                 |      |
-| kcm         | char     |                 |      |
-| xf          | char     |                 |      |
-| jsh         | char     |                 |      |
-| jsxm        | char     |                 |      |
-| sksj        | char     |                 |      |
-| message     | char     |                 |      |
+| 属性          | 内容类型 | 内容            | 描述           |
+| ------------- | -------- | --------------- | -------------- |
+| username      | char     |                 |                |
+| password      | char     |                 |                |
+| loginstatus   | char     | success\|failed |                |
+| userinfo      | dict     |                 |                |
+| Authorization | char     |                 | Request Header |
+| action        | bool     | 0(Default)\|1   |                |
+| kch           | char     |                 | 查询：课程号   |
+| kcm           | char     |                 | 查询：课程名   |
+| xf            | char     |                 | 查询：学分     |
+| jsh           | char     |                 | 查询：教师号   |
+| jsxm          | char     |                 | 查询：教师姓名 |
+| sksj          | char     |                 | 查询：上课时间 |
+| message       | char     |                 |                |
