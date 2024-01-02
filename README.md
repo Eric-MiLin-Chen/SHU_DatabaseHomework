@@ -30,18 +30,19 @@
 
 ### 前后端json格式
 
-| 超属性        | 属性     | 内容类型 | 内容            | 描述           |
-| ------------- | -------- | -------- | --------------- | -------------- |
-| login_info    | username | char     |                 |                |
-|               | password | char     |                 |                |
-|               | status   | char     | success\|failed |                |
-| user_info     |          | dict     |                 |                |
-| Authorization |          | char     |                 | Request Header |
-| action        |          | bool     | 0(Default)\|1   |                |
-| course_info   | kch      | char     |                 | 查询：课程号   |
-|               | kcm      | char     |                 | 查询：课程名   |
-|               | xf       | char     |                 | 查询：学分     |
-|               | jsh      | char     |                 | 查询：教师号   |
-|               | jsxm     | char     |                 | 查询：教师姓名 |
-|               | sksj     | char     |                 | 查询：上课时间 |
-| message       |          | char     |                 |                |
+| 超属性        | 属性     | 内容类型 | 内容                       | 描述           |
+| ------------- | -------- | -------- | -------------------------- | -------------- |
+| login_info    | username | char     |                            |                |
+|               | password | char     |                            |                |
+| status        |          | char     | success\|failed            |                |
+| user_info     |          | dict     |                            |                |
+| Authorization |          | char     |                            | Request Header |
+| action        |          | char     | enroll\|drop\|get_schedule |                |
+| total_count   |          | int      |                            | 查询的课程总数 |
+| course_info   | kch      | char     |                            | 查询：课程号   |
+|               | kcm      | char     |                            | 查询：课程名   |
+|               | xf       | char     |                            | 查询：学分     |
+|               | jsh      | char     |                            | 查询：教师号   |
+|               | jsxm     | char     |                            | 查询：教师姓名 |
+|               | sksj     | char     |                            | 查询：上课时间 |
+| message       |          | char     |                            |                |
