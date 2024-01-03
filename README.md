@@ -38,10 +38,16 @@
 |               | password | char     |                            |                |
 | status        |          | char     | success\|failed            |                |
 | user_info     |          | dict     |                            |                |
+|               | username | char     |                            |                |
+|               | name     | char     |                            |                |
+|               | school   | char     |                            |                |
+|               | level    | char     |                            |                |
+|               | gender   | char     |                            |                |
 | Authorization |          | char     | 认证密钥，判断请求是否合法 | Request Header |
 | action        |          | char     | enroll\|drop\|get_schedule |                |
 | total_count   |          | int      |                            | 查询的课程总数 |
-| course_info   | kch      | char     |                            | 查询：课程号   |
+| course_info   |          | list     |                            |                |
+|               | kch      | char     |                            | 查询：课程号   |
 |               | kcm      | char     |                            | 查询：课程名   |
 |               | xf       | char     |                            | 查询：学分     |
 |               | jsh      | char     |                            | 查询：教师号   |

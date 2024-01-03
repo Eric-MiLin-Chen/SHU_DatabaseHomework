@@ -2,9 +2,81 @@ from flask import jsonify
 import psycopg2
 
 
-class StudentManager:
-    def __init__(self, db_manager):
+class UserManager:
+    def __init__(self, db_manager, auth_manager):
         self.db_manager = db_manager
+        self.auth_manager = auth_manager
+
+    def verify_credentials(self, cursor, username, password):
+        """验证用户凭据并返回用户类型"""
+        query = "SELECT mm, qx FROM P WHERE xh = %s"
+        cursor.execute(query, (username,))
+        result = cursor.fetchone()
+        if result and result[0].strip() == password:
+            return result[1]  # 返回用户类型
+        return None
+
+    def get_user_info(self, cursor, user_type, username):
+        """根据用户类型获取用户信息"""
+        if user_type == "0":
+            return self.__get_admin_info(cursor, username, user_type)
+
+        elif user_type == "1":
+            return self.__get_teacher_info(cursor, username, user_type)
+
+        elif user_type == "2":
+            return self.__get_student_info(cursor, username, user_type)
+
+        return {}
+
+    def __get_student_info(self, cursor, username, user_type):
+        """获取学生信息"""
+        student_query = "SELECT xh, xm, yxh, nj, xb FROM S WHERE xh = %s"
+        cursor.execute(student_query, (username,))
+        user_info = cursor.fetchone()
+        return {
+            "user_info": {
+                "username": user_info[0],
+                "name": user_info[1],
+                "school": user_info[2],
+                "level": user_info[3],
+                "gender": user_info[4],
+                "role": user_type,
+            },
+        }
+
+    def __get_teacher_info(self, cursor, username, user_type):
+        """获取教师信息"""
+        teacher_query = "SELECT jsgh, jsx, zc, xb, yxh FROM T WHERE jsgh = %s"
+        cursor.execute(teacher_query, (username,))
+        user_info = cursor.fetchone()
+        return {
+            "user_info": {
+                "username": user_info[0],
+                "name": user_info[1],
+                "school": user_info[4],
+                "level": user_info[2],
+                "gender": user_info[3],
+                "role": user_type,
+            },
+        }
+
+    def __get_admin_info(self, cursor, username, user_type):
+        """获取管理员信息（如果需要）"""
+        # 如果管理员有特定信息需要返回，可以在这里添加查询逻辑
+        # 目前只返回用户类型
+        return {
+            "user_info": {
+                "username": username,
+                "name": "admin",
+                "school": "",
+                "level": "",
+                "gender": "",
+                "role": user_type,
+            },
+        }
+
+    # 其他方法，例如 enroll_student, drop_course 等
 
     def enroll_student(self, cursor, xh, kch, jsgh):
         try:
@@ -184,5 +256,51 @@ class StudentManager:
                 "total_count": total_count,
                 "course_info": partial_schedule,
                 "status": "success",
+            }
+        )
+
+    def get_teacher_schedule(self, cursor, jsgh):
+        query = """
+            SELECT
+                C.kch,
+                C.kcm,
+                O.sksj,
+                E.xh AS student_id,
+                S.xm AS student_name
+            FROM
+                O
+            JOIN
+                C ON O.kch = C.kch
+            LEFT JOIN
+                E ON O.kch = E.kch
+            LEFT JOIN
+                S ON E.xh = S.xh
+            WHERE
+                O.jsgh = %(jsgh)s;
+        """
+
+        parameters = {"jsgh": jsgh}
+
+        cursor.execute(query, parameters)
+        rows = cursor.fetchall()
+
+        teacher_schedule = {}
+        for row in rows:
+            kch, kcm, sksj, student_id, student_name = row
+            if kch not in teacher_schedule:
+                teacher_schedule[kch] = {
+                    "kch": kch,
+                    "kcm": kcm,
+                    "sksj": sksj,
+                    "student_info": [],
+                }
+            teacher_schedule[kch]["student_info"].append(
+                {"xh": student_id, "xm": student_name}
+            )
+
+        return jsonify(
+            {
+                "total_courses": len(teacher_schedule),
+                "course_info": list(teacher_schedule.values()),
             }
         )
