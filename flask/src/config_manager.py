@@ -3,7 +3,7 @@ import os
 
 
 class ConfigManager:
-    def __init__(self, file_name="config.ini"):
+    def __init__(self, file_name="./../conf/config.ini"):
         self.config = self.read_config(file_name)
 
     def read_config(self, file_name):
