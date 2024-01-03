@@ -18,19 +18,14 @@
 
 1. 学生库S
    学号、姓名、专业、在读年级、性别
-
 2. 课程库C
    课程号、学院号、课程名、学分、上课时间、教师工号
-
 3. 教师库T
    教师工号、教师姓名、教师职称、性别、学院号
-
 4. 学院库I
    学院号、学院名称
-
 5. 课表库E
    学号、课程号、教师工号
-
 6. 学生密码库P
 
    学号、密码
@@ -43,7 +38,7 @@
 |               | password | char     |                            |                |
 | status        |          | char     | success\|failed            |                |
 | user_info     |          | dict     |                            |                |
-| Authorization |          | char     |                            | Request Header |
+| Authorization |          | char     | 认证密钥，判断请求是否合法 | Request Header |
 | action        |          | char     | enroll\|drop\|get_schedule |                |
 | total_count   |          | int      |                            | 查询的课程总数 |
 | course_info   | kch      | char     |                            | 查询：课程号   |

@@ -91,22 +91,60 @@ def token_required(func):
 
 @token_required
 @connect_db
-def enroll_student(cursor, xh, kch, jsgh):
-    # 在 E 表中插入选课信息
-    insert_query = """
-        INSERT INTO E (xh, kch, jsgh)
-        VALUES (%(xh)s, %(kch)s, %(jsgh)s);
-    """
+def _enroll_student(cursor, xh, kch, jsgh):
+    try:
+        # 在 E 表中插入选课信息
+        insert_query = """
+            INSERT INTO E (xh, kch, jsgh)
+            VALUES (%(xh)s, %(kch)s, %(jsgh)s);
+        """
 
-    parameters = {
-        "xh": xh,
-        "kch": kch,
-        "jsgh": jsgh,
-    }
+        parameters = {
+            "xh": xh,
+            "kch": kch,
+            "jsgh": jsgh,
+        }
 
-    # 执行插入操作
-    cursor.execute(insert_query, parameters)
-    return jsonify({"status": "success"})
+        # 执行插入操作
+        cursor.execute(insert_query, parameters)
+        return jsonify({"status": "success"})
+    except psycopg2.errors.UniqueViolation:
+        # 唯一性冲突，返回错误表单
+        return jsonify({"status": "failed", "message": "UniqueViolation"})
+
+
+@token_required
+@connect_db
+def _drop_course(cursor, xh, kch, jsgh):
+    try:
+        # 在 E 表中删除退课信息
+        delete_query = """
+            DELETE FROM E
+            WHERE xh = %(xh)s AND kch = %(kch)s AND jsgh = %(jsgh)s;
+        """
+
+        parameters = {
+            "xh": xh,
+            "kch": kch,
+            "jsgh": jsgh,
+        }
+
+        # 执行插入操作
+        cursor.execute(delete_query, parameters)
+        # 检查受影响的行数
+        if cursor.rowcount == 0:
+            # 没有匹配的记录，抛出自定义异常或返回错误信息
+            raise Exception("No matching record found for deletion")
+
+        # 返回 JSON 响应
+        response = jsonify({"status": "success"})
+        return response
+    except psycopg2.errors.UniqueViolation:
+        # 唯一性冲突，返回错误表单
+        return jsonify({"status": "failed", "message": "UniqueViolation"})
+    except Exception as e:
+        # 处理其他异常，返回错误信息
+        return jsonify({"status": "failed", "message": str(e)})
 
 
 @connect_db
@@ -222,34 +260,132 @@ def get_partial_schedule(
     )
 
 
+# 查询已选课程信息
+@token_required
+@connect_db
+def get_enrolled_courses(cursor, xh):
+    query = """
+        SELECT
+            E.kch,
+            C.kcm,
+            T.jsxm,
+            O.sksj,
+            C.xf
+        FROM
+            E
+        JOIN
+            C ON E.kch = C.kch
+        JOIN
+            T ON E.jsgh = T.jsgh
+        JOIN
+            O ON E.kch = O.kch
+        WHERE
+            E.xh = %(xh)s;
+    """
+
+    parameters = {"xh": xh}
+
+    cursor.execute(query, parameters)
+    rows = cursor.fetchall()
+
+    enrolled_courses = [
+        {
+            "kch": row[0],
+            "kcm": row[1],
+            "jsxm": row[2],
+            "sksj": row[3],
+            "xf": row[4],
+        }
+        for row in rows
+    ]
+
+    return jsonify(enrolled_courses)
+
+
+# @connect_db
+# def get_teacher_schedule(jsgh):
+#     query = """
+#         SELECT
+#             C.kch,
+#             C.kcm,
+#             O.sksj,
+#             E.xh AS student_id,
+#             S.xm AS student_name
+#         FROM
+#             O
+#         JOIN
+#             C ON O.kch = C.kch
+#         LEFT JOIN
+#             E ON O.kch = E.kch
+#         LEFT JOIN
+#             S ON E.xh = S.xh
+#         WHERE
+#             O.jsgh = %(jsgh)s;
+#     """
+
+#     parameters = {"jsgh": jsgh}
+
+#     cursor.execute(query, parameters)
+#     rows = cursor.fetchall()
+
+#     teacher_schedule = {}
+#     for row in rows:
+#         kch, kcm, sksj, student_id, student_name = row
+#         if kch not in teacher_schedule:
+#             teacher_schedule[kch] = {
+#                 "kch": kch,
+#                 "kcm": kcm,
+#                 "sksj": sksj,
+#                 "student_info": [],
+#             }
+#         teacher_schedule[kch]["student_info"].append(
+#             {"xh": student_id, "xm": student_name}
+#         )
+
+#     return jsonify(
+#         {
+#             "total_courses": len(teacher_schedule),
+#             "courses": list(teacher_schedule.values()),
+#         }
+#     )
+
+
 # 用户登录
 @app.route("/login/", methods=["GET", "POST"], endpoint="/login/")
 @connect_db
 def login(cursor):
-    data = json.loads(request.get_data(as_text=True))
-    print(data)
-    # 在此实现登录功能，使用 cursor 进行数据库操作
-    cursor.execute(f"SELECT P.mm FROM P WHERE P.xh = {data['login_info']['username']}")
-    rows = cursor.fetchall()
-    if len(rows) > 0 and rows[0][0].strip() == data["login_info"]["password"]:
-        return jsonify(
-            {
-                "status": "success",
-                "token": generate_token(data["login_info"]["username"]),
-            }
-        )
-    else:
-        return jsonify({"status": "failed"})
+    try:
+        data = request.get_json()
+        print(data)
+        xh = data["login_info"]["username"]
+        password = data["login_info"]["password"]
+
+        # 使用参数化查询，避免 SQL 注入攻击
+        query = "SELECT P.mm FROM P WHERE P.xh = %s"
+        cursor.execute(query, (xh,))
+
+        rows = cursor.fetchall()
+        if len(rows) > 0 and rows[0][0].strip() == password:
+            return jsonify(
+                {
+                    "status": "success",
+                    "Authorization": generate_token(xh),
+                }
+            )
+        else:
+            return jsonify({"status": "failed"})
+    except Exception as e:
+        return jsonify({"status": "failed", "message": str(e)})
 
 
 # 学生用户接口
-@app.route("/enroll_course/", methods=["GET", "POST"], endpoint="/enroll_course/")
-def enroll_course(cursor):
+@app.route("/student_enroll/", methods=["GET", "POST"], endpoint="/student_enroll/")
+def student_enroll():
     # 获取前端发送的 JSON 表单
     data = request.get_json()
 
     # 判断是课程查询请求还是选课请求
-    if "action" not in data["course_info"]:
+    if "action" not in data:
         return jsonify({"status": "failed", "message": "Invalid request format"})
 
     action = data["action"]
@@ -257,47 +393,63 @@ def enroll_course(cursor):
     if action == "get_schedule":
         # 课程查询请求
         partial_schedule = get_partial_schedule(
-            cursor,
             start_position=0,
-            kch=data["kch"],
-            kcm=data["kcm"],
-            xf=data["xf"],
-            jsh=data["jsh"],
-            jsxm=data["jsxm"],
-            sksj=data["sksj"],
+            kch=data["course_info"]["kch"],
+            kcm=data["course_info"]["kcm"],
+            xf=data["course_info"]["xf"],
+            jsh=data["course_info"]["jsh"],
+            jsxm=data["course_info"]["jsxm"],
+            sksj=data["course_info"]["sksj"],
         )
         return partial_schedule
 
     elif action == "enroll":
         # 选课请求
-        response = enroll_student(
-            cursor, data["course_info"]["kch"], data["course_info"]["jsgh"]
+        response = _enroll_student(
+            data["course_info"]["kch"], data["course_info"]["jsgh"]
         )
         return response
 
     return jsonify({"status": "failed", "message": "Invalid action"})
 
 
-@connect_db
-def drop_course(cursor):
-    # 在此实现退课功能，使用 cursor 进行数据库操作
-    pass
+# 退课功能
+@app.route("/drop_course/", methods=["GET", "POST"], endpoint="/drop_course/")
+def drop_course():
+    # 获取前端发送的 JSON 表单
+    data = request.get_json()
+
+    # 判断是课程查询请求还是选课请求
+    if "action" not in data:
+        return jsonify({"status": "failed", "message": "Invalid request format"})
+
+    action = data["action"]
+
+    if action == "get_schedule":
+        # 课程查询请求
+        enrolled_courses = get_enrolled_courses()
+        return jsonify(
+            {"total_count": len(enrolled_courses), "course_info": enrolled_courses}
+        )
+
+    elif action == "drop":
+        # 选课请求
+        response = _drop_course(
+            data["course_info"]["kch"],
+            data["course_info"]["jsgh"],
+        )
+        return response
+
+    return jsonify({"status": "failed", "message": "Invalid action"})
 
 
-@connect_db
-def get_schedule(cursor):
-    # 在此实现课表查询功能，使用 cursor 进行数据库操作
-    pass
+@app.route("/get_schedule/", methods=["GET", "POST"], endpoint="/get_schedule/")
+def get_schedule():
+    # 调用已有的函数获取已选课程信息
+    enrolled_courses = get_enrolled_courses()
 
-
-"""
-查询可选课程
--- 查询学生可以选择的课程
-SELECT C.kch, C.kcm, C.xf, C.zdrs
-FROM C
-LEFT JOIN E ON C.kch = E.kch
-WHERE E.xh IS NULL;
-"""
+    # 返回已选课程信息的 JSON 响应
+    return jsonify({"enrolled_courses": enrolled_courses})
 
 
 # 教师用户接口
