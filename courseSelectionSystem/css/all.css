@@ -2,6 +2,11 @@
     --maincolor: skyblue;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+}
+
 input[type="text"],input[type="password"]{
     outline:none;
     border: 1px solid #8f8f8f;

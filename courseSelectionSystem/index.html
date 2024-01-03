@@ -7,14 +7,8 @@
     <title>小选课系统，大师作</title>
     <link rel="stylesheet" href="./css/all.css">
     <link rel="stylesheet" href="./css/login.css">
-    <link rel="stylesheet" href="./css/semester.css">
     <link rel="stylesheet" href="./css/main.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="./css/article.css">
 </head>
 
 <body>
@@ -36,24 +30,6 @@
                 <div class="login-button">
                     <button id="login-submit">登录</button>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="semester-frame" style="display: none;">
-        <div class="semester-box">
-            <div class="semester-title">
-                <h4>
-                    学期选择
-                </h4>
-            </div>
-            <div class="semester-input">
-                <p>点击选择选课学期</p>
-                <div class="semester-username">
-                    <input type="text" placeholder="请输入学期" id="semester">
-                </div>
-            </div>
-            <div class="semester-button">
-                <button id="semester-submit">确定</button>
             </div>
         </div>
     </div>
@@ -117,7 +93,70 @@
             </div>
         </aside>
         <article class="article-box">
-
+            <div class="article-item">
+                <div class="box-inquiry">
+                    <div class="box-inquiry-title">
+                        <p>课程查询</p>
+                    </div>
+                    <div class="box-inquiry-input">
+                        <div class="box-inquiry-input-item">
+                            <p>课程号：</p>
+                            <input type="text" id="courseNo">
+                        </div>
+                        <div class="box-inquiry-input-item">
+                            <p>课程名：</p>
+                            <input type="text" id="courseName">
+                        </div>
+                        <div class="box-inquiry-input-item">
+                            <p>学分：</p>
+                            <input type="text" id="courseCredit">
+                        </div>
+                        <div class="box-inquiry-input-item">
+                            <p>教师号：</p>
+                            <input type="text" id="teacherNo">
+                        </div>
+                        <div class="box-inquiry-input-item">
+                            <p>教师名：</p>
+                            <input type="text" id="teacherName">
+                        </div>
+                        <div class="box-inquiry-input-item">
+                            <p>上课时间：</p>
+                            <input type="text" id="courseTime">
+                        </div>
+                    </div>
+                    <div class="box-inquiry-button">
+                        <div><button id="courseInquiry">查询</button></div>
+                    </div>
+                </div>
+                <div class="box-inquiryResult">
+                    <div class="box-inquiryResult-title">
+                        <p>查询结果</p>
+                    </div>
+                    <div class="box-inquiryResult-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>课程号</th>
+                                    <th>课程名</th>
+                                    <th>学分</th>
+                                    <th>教师号</th>
+                                    <th>教师名</th>
+                                    <th>上课时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courseInquiryResult">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="article-item">
+2
+            </div>
+            <div class="article-item">
+3
+            </div>
         </article>
         <footer class="footer-box">
             <div class="footer-text">
