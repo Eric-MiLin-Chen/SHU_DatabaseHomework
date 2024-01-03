@@ -146,18 +146,6 @@
 }
 
 
-
-.main-frame .article-box {
-    width: 84%;
-    height: 92%;
-    background-color: #eeeeee;
-    position: absolute;
-    top: 5%;
-    right: 0%;
-    display: flex;
-    flex-direction: column;
-}
-
 .main-frame .footer-box {
     width: 84%;
     height: 3%;
