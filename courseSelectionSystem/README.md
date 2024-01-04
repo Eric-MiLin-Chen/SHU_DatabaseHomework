@@ -53,9 +53,203 @@
 |               | sksj     | char     |                             | 查询：上课时间 |
 | message       |          | char     |                             | 报错信息       |
 
-
-
 ### 后端
 
-* [ ] 重复选课判断
+#### API
 
+**登录界面：**
+
+   请求：
+
+   ```json
+   {
+      "login_info": {
+         "username": "",
+         "password": "",
+      }
+   }
+
+   ```
+
+   返回：
+
+   ```json
+   // 失败
+   {
+      "status": "failed",
+      "message": "",
+   }
+   // 所有请求失败返回都如上，以下不再重复（包括身份认证）
+
+   // 成功
+   {
+      "status": "success",
+      "Authorization": "",
+      "user_info": {
+         "username": "",// 学号/工号
+         "name": "",    // 姓名，管理员"name": "admin"
+         "school": "",
+         "level": "",
+         "gender": "",
+         "role": "",    // 用户类型/权限等级
+      },
+   }
+   // 后续Authorization作为请求头，不会明确写入发送端要求
+   // 除了登录外每次请求都有身份验证
+   ```
+
+1. 学生用户
+   1. 选课/课程查询界面
+
+   请求：
+
+   ```json
+   // get_schedule
+   {
+      "action": "get_schedule",
+      "course_info": {
+         "kch": "",
+         "kcm": "",
+         "xf": "",
+         "jsh": "",
+         "jsxm": "",
+         "sksj": "",
+         // 没有选择也必须要有
+      }, 
+   }
+
+   // enroll
+   {
+      "action": "enroll",
+      "course_info": {
+         "kch": "",
+         "jsh": "",
+         // "kcm": "",
+         // "xf": "",
+         // "jsxm": "",
+         // "sksj": "",
+      }, 
+   }
+   ```
+
+   返回：
+
+   ```json
+   // 成功
+   // 课程查询请求
+   {
+      "total_count": (int),
+      "course_info": [
+         {
+            {
+               "kch": "",
+               "kcm": "",
+               "xf": "",
+               "jsh": "",
+               "jsxm": "",
+               "sksj": "",
+               "zdrs": "",
+            }, 
+         },
+         // ...
+      ],
+      "status": "success",
+   }
+
+   // 选课请求
+   {
+      "status": "success",
+   }
+   ```
+
+   2. 退课界面
+
+   请求：
+
+   ```json
+   // get_schedule时不检查course_info
+   {
+      "action": "get_schedule",
+   }
+
+   // drop
+   {
+      "action": "drop",
+      // get_schedule时不检查course_info
+      "course_info": {
+         "kch": "",
+         "kcm": "",
+         // "xf": "",
+         // "jsh": "",
+         // "jsxm": "",
+         // "sksj": "",
+         // "zdrs": "",
+      }, 
+   }
+   ```
+
+   返回：
+
+   ```json
+   // get_schedule
+   {
+      "status": "success",
+      "total_count": (int),
+      "course_info": [
+         {
+            "kch": "",
+            "kcm": "",
+            "xf": "",
+            "jsh": "",
+            "jsxm": "",
+            "sksj": "",
+            "zdrs": "",
+         },
+      ], 
+   }
+
+   // drop
+   {
+      "status": "success",
+   }
+   ```
+
+   3. 课表查询
+   
+   请求：
+
+   ```json
+   // get_schedule时不检查course_info
+   {
+      "action": "get_schedule",
+   }
+   ```
+
+   返回：
+
+   ```json
+   // get_schedule
+   {
+      "status": "success",
+      "total_count": (int),
+      "course_info": [
+         {
+            "kch": "",
+            "kcm": "",
+            "xf": "",
+            "jsh": "",
+            "jsxm": "",
+            "sksj": "",
+            "zdrs": "",
+         },
+      ], 
+   }
+   ```
+
+2. 教师用户
+   1. 课表查询
+3. 管理员用户
+   1. 增删查改课程（包括课程容量/锁课？）
+   2. 增删查改学生、教师
+   3. 增删查改学生选择课程
+   4. 修改课程最大人数

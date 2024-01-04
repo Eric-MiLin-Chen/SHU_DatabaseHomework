@@ -32,6 +32,10 @@ document.getElementById("login-submit").onclick = function () {
             var res = JSON.parse(xhr.responseText);
             if (res.status == "success") {
                 Authorization = res.Authorization;
+                document.getElementById("sname").innerHTML = res.user_info.name;
+                document.getElementById("sschool").innerHTML = res.user_info.school;
+                document.getElementById("sgrade").innerHTML = res.user_info.level;
+                document.getElementById("ssex").innerHTML = res.user_info.gender;
                 turnStudent();
             } else {
                 alert(res.message);
@@ -186,7 +190,7 @@ function handleCurrentCourseQuery() {
                     <td><button class="dropCourseButton">退课</button></td>
                     </tr>`;
                     document.getElementsByClassName("dropCourseButton")[i].onclick = function () {
-                        handleDropCourse(courseInfo[i].kch, courseInfo[i].jsh, "drop");
+                        handleSelectCourse(courseInfo[i].kch, courseInfo[i].jsh, "drop");
                     }
                 }
                 document.getElementById("currentSelectedResult").innerHTML = courseInfoStr;
