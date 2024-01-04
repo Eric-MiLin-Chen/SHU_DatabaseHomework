@@ -78,32 +78,32 @@ class UserManager:
 
     # 其他方法，例如 enroll_student, drop_course 等
 
-    def enroll_student(self, cursor, xh, kch, jsgh):
+    def enroll_student(self, cursor, xh, kch, jsh):
         try:
             insert_query = """
                 INSERT INTO E (xh, kch, jsgh)
-                VALUES (%(xh)s, %(kch)s, %(jsgh)s);
+                VALUES (%(xh)s, %(kch)s, %(jsh)s);
             """
             parameters = {
                 "xh": xh,
                 "kch": kch,
-                "jsgh": jsgh,
+                "jsh": jsh,
             }
             cursor.execute(insert_query, parameters)
             return jsonify({"status": "success"})
         except psycopg2.errors.UniqueViolation:
             return jsonify({"status": "failed", "message": "UniqueViolation"})
 
-    def drop_course(self, cursor, xh, kch, jsgh):
+    def drop_course(self, cursor, xh, kch, jsh):
         try:
             delete_query = """
                 DELETE FROM E
-                WHERE xh = %(xh)s AND kch = %(kch)s AND jsgh = %(jsgh)s;
+                WHERE xh = %(xh)s AND kch = %(kch)s AND jsh = %(jsh)s;
             """
             parameters = {
                 "xh": xh,
                 "kch": kch,
-                "jsgh": jsgh,
+                "jsh": jsh,
             }
             cursor.execute(delete_query, parameters)
             if cursor.rowcount == 0:
@@ -120,6 +120,8 @@ class UserManager:
                 T.jsxm,
                 O.sksj,
                 C.xf
+                O.jsh
+                C.zdrs
             FROM
                 E
             JOIN
@@ -142,6 +144,8 @@ class UserManager:
                 "jsxm": row[2],
                 "sksj": row[3],
                 "xf": row[4],
+                "jsh": row[5],
+                "zdrs": row[6],
             }
             for row in rows
         ]
@@ -153,12 +157,12 @@ class UserManager:
         cursor,
         start_position,
         length=20,
-        kch=None,
-        kcm=None,
-        xf=None,
-        jsh=None,
-        jsxm=None,
-        sksj=None,
+        kch="",
+        kcm="",
+        xf="",
+        jsh="",
+        jsxm="",
+        sksj="",
     ):
         # 构建 SQL 查询总数的语句
         count_query = """
@@ -176,22 +180,22 @@ class UserManager:
         where_conditions = []
         parameters = {}
 
-        if kch is not None:
+        if kch is not "":
             where_conditions.append("O.kch = %(kch)s")
             parameters["kch"] = kch
-        if kcm is not None:
+        if kcm is not "":
             where_conditions.append("C.kcm = %(kcm)s")
             parameters["kcm"] = kcm
-        if xf is not None:
+        if xf is not "":
             where_conditions.append("C.xf = %(xf)s")
             parameters["xf"] = xf
-        if jsh is not None:
+        if jsh is not "":
             where_conditions.append("O.jsh = %(jsh)s")
             parameters["jsh"] = jsh
-        if jsxm is not None:
+        if jsxm is not "":
             where_conditions.append("T.jsxm = %(jsxm)s")
             parameters["jsxm"] = jsxm
-        if sksj is not None:
+        if sksj is not "":
             where_conditions.append("O.sksj = %(sksj)s")
             parameters["sksj"] = sksj
 

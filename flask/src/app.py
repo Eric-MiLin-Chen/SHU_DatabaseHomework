@@ -26,7 +26,10 @@ def login(cursor):
     password = data["login_info"]["password"]
 
     if not username or not password:
-        return jsonify({"message": "Missing username or password"}), 400
+        return (
+            jsonify({"status": "failed", "message": "Missing username or password"}),
+            400,
+        )
 
     try:
         user_type = user_manager.verify_credentials(cursor, username, password)
@@ -45,19 +48,17 @@ def login(cursor):
             return jsonify({"status": "failed", "message": "Invalid credentials"}), 401
 
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        return jsonify({"status": "failed", "message": str(e)}), 500
 
 
 # 学生选课路由
 @app.route("/student_enroll/", methods=["POST"], endpoint="/student_enroll/s")
 @auth_manager.token_required("student")
 @db_manager.connect_db
-def student_enroll(current_user):
+def student_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
     xh = current_user
-    kch = data["course_info"]["kch"]
-    jsgh = data["course_info"]["jsgh"]
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -69,6 +70,7 @@ def student_enroll(current_user):
         # 课程查询请求
         partial_schedule = user_manager.get_partial_schedule(
             start_position=0,
+            length=20,
             kch=data["course_info"]["kch"],
             kcm=data["course_info"]["kcm"],
             xf=data["course_info"]["xf"],
@@ -81,7 +83,10 @@ def student_enroll(current_user):
     elif action == "enroll":
         # 选课请求
         response = user_manager.enroll_student(
-            data["course_info"]["kch"], data["course_info"]["jsgh"]
+            cursor,
+            xh=xh,
+            kch=data["course_info"]["kch"],
+            jsh=data["course_info"]["jsh"],
         )
         return response
 
@@ -95,8 +100,6 @@ def student_enroll(current_user):
 def drop_course(cursor, current_user):
     data = request.get_json()
     xh = current_user  # 当前登录的学生学号
-    kch = data["course_info"]["kch"]  # 课程号
-    jsgh = data["course_info"]["jsgh"]  # 教师号
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -106,16 +109,22 @@ def drop_course(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        enrolled_courses = user_manager.get_enrolled_courses()
+        enrolled_courses = user_manager.get_enrolled_courses(cursor=cursor, xh=xh)
         return jsonify(
-            {"total_count": len(enrolled_courses), "course_info": enrolled_courses}
+            {
+                "status": "success",
+                "total_count": len(enrolled_courses),
+                "course_info": enrolled_courses,
+            }
         )
 
     elif action == "drop":
         # 选课请求
         response = user_manager.drop_course(
-            data["course_info"]["kch"],
-            data["course_info"]["jsgh"],
+            cursor=cursor,
+            xh=xh,
+            kch=data["course_info"]["kch"],
+            jsh=data["course_info"]["jsh"],
         )
         return response
 
@@ -126,12 +135,26 @@ def drop_course(cursor, current_user):
 @auth_manager.token_required("student")
 @db_manager.connect_db
 def get_schedule(cursor, current_user):
+    data = request.get_json()
     xh = current_user
-    # 调用已有的函数获取已选课程信息
-    enrolled_courses = user_manager.get_enrolled_courses(cursor, xh)
+    if "action" not in data:
+        return jsonify({"status": "failed", "message": "Invalid request format"})
 
-    # 返回已选课程信息的 JSON 响应
-    return jsonify({"course_info": enrolled_courses})
+    action = data["action"]
+
+    if action == "get_schedule":
+        # 调用已有的函数获取已选课程信息
+        enrolled_courses = user_manager.get_enrolled_courses(cursor, xh)
+
+        # 返回已选课程信息的 JSON 响应
+        return jsonify(
+            {
+                "status": "success",
+                "total_count": len(enrolled_courses),
+                "course_info": enrolled_courses,
+            }
+        )
+    return jsonify({"status": "failed", "message": "Invalid action"})
 
 
 # 教师用户接口
@@ -139,7 +162,13 @@ def get_schedule(cursor, current_user):
 @auth_manager.token_required("teacher")
 @db_manager.connect_db
 def get_teacher_schedule(cursor, current_user):
+    data = request.get_json()
     jsgh = current_user
+    if "action" not in data:
+        return jsonify({"status": "failed", "message": "Invalid request format"})
+
+    action = data["action"]
+
     # 调用已有的函数获取已选课程信息
     enrolled_courses = user_manager.get_teacher_schedule(cursor, jsgh)
 
