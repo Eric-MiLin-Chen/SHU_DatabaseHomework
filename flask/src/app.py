@@ -22,6 +22,7 @@ user_manager = UserManager(db_manager, auth_manager)
 @db_manager.connect_db
 def login(cursor):
     data = request.get_json()
+    print(data)
     username = data["login_info"]["username"]
     password = data["login_info"]["password"]
 

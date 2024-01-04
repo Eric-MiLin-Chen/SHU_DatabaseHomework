@@ -18,29 +18,34 @@ class AuthManager:
         )
         return token
 
-    def token_required(self, func, permission):
-        @wraps(func)
-        def decorated(*args, **kwargs):
-            token = request.headers.get("Authorization")
-            if not token:
-                return (
-                    jsonify({"status": "failed", "message": "Token is missing!"}),
-                    401,
-                )
-            try:
-                data = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-                current_user = data["username"]
-                user_role = int(data["role"])
-                if permission != self.ROLE_PERMISSIONSa[user_role]:
+    def token_required(self, permission):
+        def decorator(func):
+            @wraps(func)
+            def decorated(*args, **kwargs):
+                token = request.headers.get("Authorization")
+                if not token:
                     return (
-                        jsonify({"status": "failed", "message": "Permission denied!"}),
-                        403,
+                        jsonify({"status": "failed", "message": "Token is missing!"}),
+                        401,
                     )
-            except:
-                return (
-                    jsonify({"status": "failed", "message": "Token is invalid!"}),
-                    401,
-                )
-            return func(current_user=current_user, *args, **kwargs)
+                try:
+                    data = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+                    current_user = data["username"]
+                    user_role = data["role"]
+                    if permission != self.ROLE_PERMISSIONS[int(user_role)]:
+                        return (
+                            jsonify(
+                                {"status": "failed", "message": "Permission denied!"}
+                            ),
+                            403,
+                        )
+                except:
+                    return (
+                        jsonify({"status": "failed", "message": "Token is invalid!"}),
+                        401,
+                    )
+                return func(current_user=current_user, *args, **kwargs)
 
-        return decorated
+            return decorated
+
+        return decorator
