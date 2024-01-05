@@ -18,6 +18,7 @@ class UserManager:
 
     def get_user_info(self, cursor, user_type, username):
         """根据用户类型获取用户信息"""
+        user_type = user_type.strip()
         if user_type == "0":
             return self.__get_admin_info(cursor, username, user_type)
 
@@ -31,10 +32,11 @@ class UserManager:
 
     def __get_student_info(self, cursor, username, user_type):
         """获取学生信息"""
-        student_query = "SELECT xh, xm, yxh, nj, xb FROM S WHERE xh = %s"
+        student_query = "SELECT xh, xm, xyh, zdnj, xb FROM S WHERE xh = %s"
         cursor.execute(student_query, (username,))
         user_info = cursor.fetchone()
         return {
+            "status": "success",
             "user_info": {
                 "username": user_info[0],
                 "name": user_info[1],
@@ -47,10 +49,11 @@ class UserManager:
 
     def __get_teacher_info(self, cursor, username, user_type):
         """获取教师信息"""
-        teacher_query = "SELECT jsgh, jsx, zc, xb, yxh FROM T WHERE jsgh = %s"
+        teacher_query = "SELECT jsgh, jsxm, jszc, xb, xyh FROM T WHERE jsgh = %s"
         cursor.execute(teacher_query, (username,))
         user_info = cursor.fetchone()
         return {
+            "status": "success",
             "user_info": {
                 "username": user_info[0],
                 "name": user_info[1],
@@ -66,6 +69,7 @@ class UserManager:
         # 如果管理员有特定信息需要返回，可以在这里添加查询逻辑
         # 目前只返回用户类型
         return {
+            "status": "success",
             "user_info": {
                 "username": username,
                 "name": "admin",
@@ -180,22 +184,22 @@ class UserManager:
         where_conditions = []
         parameters = {}
 
-        if kch is not "":
+        if kch != "":
             where_conditions.append("O.kch = %(kch)s")
             parameters["kch"] = kch
-        if kcm is not "":
+        if kcm != "":
             where_conditions.append("C.kcm = %(kcm)s")
             parameters["kcm"] = kcm
-        if xf is not "":
+        if xf != "":
             where_conditions.append("C.xf = %(xf)s")
             parameters["xf"] = xf
-        if jsh is not "":
+        if jsh != "":
             where_conditions.append("O.jsh = %(jsh)s")
             parameters["jsh"] = jsh
-        if jsxm is not "":
+        if jsxm != "":
             where_conditions.append("T.jsxm = %(jsxm)s")
             parameters["jsxm"] = jsxm
-        if sksj is not "":
+        if sksj != "":
             where_conditions.append("O.sksj = %(sksj)s")
             parameters["sksj"] = sksj
 

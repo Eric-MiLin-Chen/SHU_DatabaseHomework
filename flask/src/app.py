@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from config_manager import ConfigManager
 from db_manager import DBManager
 from auth_manager import AuthManager
 from user_manager import UserManager
 
 app = Flask(__name__)
+cors = CORS(app, origins="*")
 
 # 配置和数据库管理
 config_manager = ConfigManager()
@@ -22,10 +24,8 @@ user_manager = UserManager(db_manager, auth_manager)
 @db_manager.connect_db
 def login(cursor):
     data = request.get_json()
-    print(data)
     username = data["login_info"]["username"]
     password = data["login_info"]["password"]
-
     if not username or not password:
         return (
             jsonify({"status": "failed", "message": "Missing username or password"}),
@@ -36,9 +36,14 @@ def login(cursor):
         user_type = user_manager.verify_credentials(cursor, username, password)
         if user_type is not None:
             user_info = user_manager.get_user_info(cursor, user_type, username)
+            ans = {
+                "Authorization": auth_manager.generate_token(
+                    username, user_info["user_info"]["role"]
+                ),
+                **user_info,
+            }
             return jsonify(
                 {
-                    "status": "success",
                     "Authorization": auth_manager.generate_token(
                         username, user_info["user_info"]["role"]
                     ),
