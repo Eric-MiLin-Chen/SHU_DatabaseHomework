@@ -32,7 +32,7 @@ class UserManager:
 
     def __get_student_info(self, cursor, username, user_type):
         """获取学生信息"""
-        student_query = "SELECT xh, xm, xyh, zdnj, xb FROM S WHERE xh = %s"
+        student_query = "SELECT S.xh, S.xm, I.xymc, S.zdnj, S.xb FROM S, I WHERE S.xh = %s AND S.xyh = I.xyh"
         cursor.execute(student_query, (username,))
         user_info = cursor.fetchone()
         return {
@@ -49,7 +49,7 @@ class UserManager:
 
     def __get_teacher_info(self, cursor, username, user_type):
         """获取教师信息"""
-        teacher_query = "SELECT jsgh, jsxm, jszc, xb, xyh FROM T WHERE jsgh = %s"
+        teacher_query = "SELECT T.jsgh, T.jsxm, T.jszc, T.xb, I.xymc FROM T, I WHERE jsgh = %s AND T.xyh = I.xyh"
         cursor.execute(teacher_query, (username,))
         user_info = cursor.fetchone()
         return {
@@ -85,7 +85,7 @@ class UserManager:
     def enroll_student(self, cursor, xh, kch, jsh):
         try:
             insert_query = """
-                INSERT INTO E (xh, kch, jsgh)
+                INSERT INTO E (xh, kch, jsh)
                 VALUES (%(xh)s, %(kch)s, %(jsh)s);
             """
             parameters = {
@@ -123,17 +123,17 @@ class UserManager:
                 C.kcm,
                 T.jsxm,
                 O.sksj,
-                C.xf
-                O.jsh
+                C.xf,
+                O.jsh,
                 C.zdrs
             FROM
                 E
             JOIN
                 C ON E.kch = C.kch
             JOIN
-                T ON E.jsgh = T.jsgh
-            JOIN
                 O ON E.kch = O.kch
+            JOIN
+                T ON O.jsgh = T.jsgh
             WHERE
                 E.xh = %(xh)s;
         """
@@ -154,7 +154,13 @@ class UserManager:
             for row in rows
         ]
 
-        return jsonify(enrolled_courses)
+        return jsonify(
+            {
+                "status": "success",
+                "total_count": len(enrolled_courses),
+                "course_info": enrolled_courses,
+            }
+        )
 
     def get_partial_schedule(
         self,
@@ -257,7 +263,13 @@ class UserManager:
             }
             for row in rows
         ]
-
+        print(
+            {
+                "total_count": total_count,
+                "course_info": partial_schedule,
+                "status": "success",
+            }
+        )
         # 将总数和分页结果一起返回
         return jsonify(
             {
@@ -308,6 +320,7 @@ class UserManager:
 
         return jsonify(
             {
+                "status": "success",
                 "total_courses": len(teacher_schedule),
                 "course_info": list(teacher_schedule.values()),
             }

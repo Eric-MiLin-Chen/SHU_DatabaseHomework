@@ -242,12 +242,12 @@
 
 .box-schedule-table table thead {
     width: 100%;
-    height: 6.5%;
+    height: 10%;
 }
 
 .box-schedule-table table tbody {
     width: 100%;
-    height: 93.5%;
+    height: 90%;
     overflow-y: scroll;
 }
 

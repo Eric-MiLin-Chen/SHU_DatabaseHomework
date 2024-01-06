@@ -102,146 +102,182 @@
 
    1. 选课/课程查询界面
 
-   请求：
+      请求：
 
-   ```json
-   // get_schedule
-   {
-      "action": "get_schedule",
-      "course_info": {
-         "kch": "",
-         "kcm": "",
-         "xf": "",
-         "jsh": "",
-         "jsxm": "",
-         "sksj": "",
-         // 没有选择也必须要有
-      }, 
-   }
+      ```json
+      // get_schedule
+      {
+         "action": "get_schedule",
+         "course_info": {
+            "kch": "",
+            "kcm": "",
+            "xf": "",
+            "jsh": "",
+            "jsxm": "",
+            "sksj": "",
+            // 没有选择也必须要有
+         }, 
+      }
 
-   // enroll
-   {
-      "action": "enroll",
-      "course_info": {
-         "kch": "",
-         "jsh": "",
-         // "kcm": "",
-         // "xf": "",
-         // "jsxm": "",
-         // "sksj": "",
-      }, 
-   }
-   ```
-   返回：
+      // enroll
+      {
+         "action": "enroll",
+         "course_info": {
+            "kch": "",
+            "jsh": "",
+            // "kcm": "",
+            // "xf": "",
+            // "jsxm": "",
+            // "sksj": "",
+         }, 
+      }
+      ```
+      返回：
 
-   ```json
-   // 成功
-   // 课程查询请求
-   {
-      "total_count": (int),
-      "course_info": [
-         {
-           "kch": "",
-           "kcm": "",
-           "xf": "",
-           "jsh": "",
-           "jsxm": "",
-           "sksj": "",
-           "zdrs": "",
-         },
-         // ...
-      ],
-      "status": "success",
-   }
+      ```json
+      // 成功
+      // 课程查询请求
+      {
+         "total_count": (int),
+         "course_info": [
+            {
+               {
+                  "kch": "",
+                  "kcm": "",
+                  "xf": "",
+                  "jsh": "",
+                  "jsxm": "",
+                  "sksj": "",
+                  "zdrs": "",
+               }, 
+            },
+            // ...
+         ],
+         "status": "success",
+      }
 
-   // 选课请求
-   {
-      "status": "success",
-   }
-   ```
+      // 选课请求
+      {
+         "status": "success",
+      }
+      ```
+
    2. 退课界面
 
-   请求：
+      请求：
 
-   ```json
-   // get_schedule时不检查course_info
-   {
-      "action": "get_schedule",
-   }
-
-   // drop
-   {
-      "action": "drop",
+      ```json
       // get_schedule时不检查course_info
-      "course_info": {
-         "kch": "",
-         "kcm": "",
-         // "xf": "",
-         // "jsh": "",
-         // "jsxm": "",
-         // "sksj": "",
-         // "zdrs": "",
-      }, 
-   }
-   ```
-   返回：
+      {
+         "action": "get_schedule",
+      }
 
-   ```json
-   // get_schedule
-   {
-      "status": "success",
-      "total_count": (int),
-      "course_info": [
-         {
+      // drop
+      {
+         "action": "drop",
+         // get_schedule时不检查course_info
+         "course_info": {
             "kch": "",
             "kcm": "",
-            "xf": "",
-            "jsh": "",
-            "jsxm": "",
-            "sksj": "",
-            "zdrs": "",
-         },
-      ], 
-   }
+            // "xf": "",
+            // "jsh": "",
+            // "jsxm": "",
+            // "sksj": "",
+            // "zdrs": "",
+         }, 
+      }
+      ```
+      返回：
 
-   // drop
-   {
-      "status": "success",
-   }
-   ```
+      ```json
+      // get_schedule
+      {
+         "status": "success",
+         "total_count": (int),
+         "course_info": [
+            {
+               "kch": "",
+               "kcm": "",
+               "xf": "",
+               "jsh": "",
+               "jsxm": "",
+               "sksj": "",
+               "zdrs": "",
+            },
+         ], 
+      }
+
+      // drop
+      {
+         "status": "success",
+      }
+      ```
+
    3. 课表查询
 
-   请求：
+      请求：
 
-   ```json
-   // get_schedule时不检查course_info
-   {
-      "action": "get_schedule",
-   }
-   ```
-   返回：
+      ```json
+      // get_schedule时不检查course_info
+      {
+         "action": "get_schedule",
+      }
+      ```
+      返回：
 
-   ```json
-   // get_schedule
-   {
-      "status": "success",
-      "total_count": (int),
-      "course_info": [
-         {
-            "kch": "",
-            "kcm": "",
-            "xf": "",
-            "jsh": "",
-            "jsxm": "",
-            "sksj": "",
-            "zdrs": "",
-         },
-      ], 
-   }
-   ```
+      ```json
+      // get_schedule
+      {
+         "status": "success",
+         "total_count": (int),
+         "course_info": [
+            {
+               "kch": "",
+               "kcm": "",
+               "xf": "",
+               "jsh": "",
+               "jsxm": "",
+               "sksj": "",
+               "zdrs": "",
+            },
+         ], 
+      }
+      ```
+
 2. 教师用户
 
    1. 课表查询
+   
+      请求：
+
+      ```json
+      // get_schedule时不检查course_info
+      {
+         "action": "get_schedule",
+      }
+
+      ```
+      返回：
+
+      ```json
+      // get_schedule
+      {
+         "status": "success",
+         "total_count": (int),
+         "course_info": [
+            {
+               "kch": "",
+               "kcm": "",
+               "xf": "",
+               "jsh": "",
+               "jsxm": "",
+               "sksj": "",
+               "zdrs": "",
+            },
+         ], 
+      }
+      ```
+
 3. 管理员用户
 
    1. 增删查改课程（包括课程容量/锁课？）

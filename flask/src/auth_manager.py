@@ -22,8 +22,9 @@ class AuthManager:
         def decorator(func):
             @wraps(func)
             def decorated(*args, **kwargs):
-                token = request.get_json("Authorization")
+                token = request.headers.get("Authorization")
                 if not token:
+                    print("No authorization!")
                     return (
                         jsonify({"status": "failed", "message": "Token is missing!"}),
                         401,

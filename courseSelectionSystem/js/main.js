@@ -1,6 +1,6 @@
 
 var tested = false;        //测试时设置为true，正式使用时设置为false
-var flaskurl = "http://127.0.0.1:5000";
+var flaskurl = "http://127.0.0.1:5001";
 var currentuser;
 setInterval(() => {
     currentuser = document.getElementsByClassName("nav-no")[0].innerHTML;
@@ -129,30 +129,48 @@ function handleCourseQuery() {
     };
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", `${flaskurl}/student_enroll/`, true);
+    if (tested) { xhr.open("get", "test.json"); }
+    else { xhr.open("POST", `${flaskurl}/student_enroll/`, true); }
     xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(dataStr);
+    xhr.setRequestHeader("Authorization", Authorization);
+    if (tested) { xhr.send(null); }
+    else { xhr.send(dataStr); }
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             var res = JSON.parse(xhr.responseText);
             if (res.status == "success") {
                 var courseInfo = res.course_info;
-                var courseInfoStr = "";
+                // console.log(courseInfo);
                 for (let i = 0; i < courseInfo.length; i++) {
-                    courseInfoStr += `<tr>
-                    <td>${courseInfo[i].kch}</td>
-                    <td>${courseInfo[i].kcm}</td>
-                    <td>${courseInfo[i].xf}</td>
-                    <td>${courseInfo[i].jsh}</td>
-                    <td>${courseInfo[i].jsxm}</td>
-                    <td>${courseInfo[i].sksj}</td>
-                    <td><button class="selectCourseButton">选课</button></td>
-                    </tr>`;
-                    document.getElementsByClassName("selectCourseButton")[i].onclick = function () {
+                    let newtr = document.createElement("tr");
+                    let newtd0 = document.createElement("td");
+                    newtd0.innerHTML = courseInfo[i].kch;
+                    let newtd1 = document.createElement("td");
+                    newtd1.innerHTML = courseInfo[i].kcm;
+                    let newtd2 = document.createElement("td");
+                    newtd2.innerHTML = courseInfo[i].xf;
+                    let newtd3 = document.createElement("td");
+                    newtd3.innerHTML = courseInfo[i].jsh;
+                    let newtd4 = document.createElement("td");
+                    newtd4.innerHTML = courseInfo[i].jsxm;
+                    let newtd5 = document.createElement("td");
+                    newtd5.innerHTML = courseInfo[i].sksj;
+                    let newtd6 = document.createElement("td");
+                    let newbutton = document.createElement("button");
+                    newbutton.innerHTML = "选课";
+                    newbutton.onclick = function () {
                         handleSelectCourse(courseInfo[i].kch, courseInfo[i].jsh, "enroll");
                     }
+                    newtd6.appendChild(newbutton);
+                    newtr.appendChild(newtd0);
+                    newtr.appendChild(newtd1);
+                    newtr.appendChild(newtd2);
+                    newtr.appendChild(newtd3);
+                    newtr.appendChild(newtd4);
+                    newtr.appendChild(newtd5);
+                    newtr.appendChild(newtd6);
+                    document.getElementById("courseInquiryResult").appendChild(newtr);
                 }
-                document.getElementById("courseInquiryResult").innerHTML = courseInfoStr;
             } else {
                 alert(res.message);
             }
@@ -170,30 +188,48 @@ function handleCurrentCourseQuery() {
     };
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", `${flaskurl}/drop_course/`, true);
+    if (tested) { xhr.open("get", "test.json"); }
+    else { xhr.open("POST", `${flaskurl}/get_schedule/`, true); }
     xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(dataStr);
+    xhr.setRequestHeader("Authorization", Authorization);
+    if (tested) { xhr.send(null); }
+    else { xhr.send(dataStr); }
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             var res = JSON.parse(xhr.responseText);
             if (res.status == "success") {
                 var courseInfo = res.course_info;
-                var courseInfoStr = "";
                 for (let i = 0; i < courseInfo.length; i++) {
-                    courseInfoStr += `<tr>
-                    <td>${courseInfo[i].kch}</td>
-                    <td>${courseInfo[i].kcm}</td>
-                    <td>${courseInfo[i].xf}</td>
-                    <td>${courseInfo[i].jsh}</td>
-                    <td>${courseInfo[i].jsxm}</td>
-                    <td>${courseInfo[i].sksj}</td>
-                    <td><button class="dropCourseButton">退课</button></td>
-                    </tr>`;
-                    document.getElementsByClassName("dropCourseButton")[i].onclick = function () {
+
+                    let newtr = document.createElement("tr");
+                    let newtd0 = document.createElement("td");
+                    newtd0.innerHTML = courseInfo[i].kch;
+                    let newtd1 = document.createElement("td");
+                    newtd1.innerHTML = courseInfo[i].kcm;
+                    let newtd2 = document.createElement("td");
+                    newtd2.innerHTML = courseInfo[i].xf;
+                    let newtd3 = document.createElement("td");
+                    newtd3.innerHTML = courseInfo[i].jsh;
+                    let newtd4 = document.createElement("td");
+                    newtd4.innerHTML = courseInfo[i].jsxm;
+                    let newtd5 = document.createElement("td");
+                    newtd5.innerHTML = courseInfo[i].sksj;
+                    let newtd6 = document.createElement("td");
+                    let newbutton = document.createElement("button");
+                    newbutton.innerHTML = "退课";
+                    newbutton.onclick = function () {
                         handleSelectCourse(courseInfo[i].kch, courseInfo[i].jsh, "drop");
                     }
+                    newtd6.appendChild(newbutton);
+                    newtr.appendChild(newtd0);
+                    newtr.appendChild(newtd1);
+                    newtr.appendChild(newtd2);
+                    newtr.appendChild(newtd3);
+                    newtr.appendChild(newtd4);
+                    newtr.appendChild(newtd5);
+                    newtr.appendChild(newtd6);
+                    document.getElementById("currentSelectedResult").appendChild(newtr);
                 }
-                document.getElementById("currentSelectedResult").innerHTML = courseInfoStr;
             } else {
                 alert(res.message);
             }
@@ -221,6 +257,7 @@ function handleSelectCourse(kch, jsh, action) {
         xhr.open("POST", `${flaskurl}/drop_course/`, true);
     }
     xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
     xhr.send(dataStr);
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
@@ -249,9 +286,12 @@ function handleScheduleQuery() {
     };
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", `${flaskurl}/get_schedule/`, true);
+    if (tested) { xhr.open("get", "test.json"); }
+    else { xhr.open("POST", `${flaskurl}/get_schedule/`, true); }
     xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(dataStr);
+    xhr.setRequestHeader("Authorization", Authorization);
+    if (tested) { xhr.send(null); }
+    else { xhr.send(dataStr); }
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             var res = JSON.parse(xhr.responseText);

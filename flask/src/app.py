@@ -58,7 +58,7 @@ def login(cursor):
 
 
 # 学生选课路由
-@app.route("/student_enroll/", methods=["POST"], endpoint="/student_enroll/s")
+@app.route("/student_enroll/", methods=["POST"], endpoint="/student_enroll/")
 @auth_manager.token_required("student")
 @db_manager.connect_db
 def student_enroll(cursor, current_user):
@@ -75,6 +75,7 @@ def student_enroll(cursor, current_user):
     if action == "get_schedule":
         # 课程查询请求
         partial_schedule = user_manager.get_partial_schedule(
+            cursor=cursor,
             start_position=0,
             length=20,
             kch=data["course_info"]["kch"],
@@ -116,13 +117,7 @@ def drop_course(cursor, current_user):
     if action == "get_schedule":
         # 课程查询请求
         enrolled_courses = user_manager.get_enrolled_courses(cursor=cursor, xh=xh)
-        return jsonify(
-            {
-                "status": "success",
-                "total_count": len(enrolled_courses),
-                "course_info": enrolled_courses,
-            }
-        )
+        return enrolled_courses
 
     elif action == "drop":
         # 选课请求
@@ -151,15 +146,8 @@ def get_schedule(cursor, current_user):
     if action == "get_schedule":
         # 调用已有的函数获取已选课程信息
         enrolled_courses = user_manager.get_enrolled_courses(cursor, xh)
-
         # 返回已选课程信息的 JSON 响应
-        return jsonify(
-            {
-                "status": "success",
-                "total_count": len(enrolled_courses),
-                "course_info": enrolled_courses,
-            }
-        )
+        return enrolled_courses
     return jsonify({"status": "failed", "message": "Invalid action"})
 
 
@@ -175,11 +163,10 @@ def get_teacher_schedule(cursor, current_user):
 
     action = data["action"]
 
-    # 调用已有的函数获取已选课程信息
-    enrolled_courses = user_manager.get_teacher_schedule(cursor, jsgh)
-
-    # 返回已选课程信息的 JSON 响应
-    return jsonify(enrolled_courses)
+    if action == "get_schedule":
+        enrolled_courses = user_manager.get_teacher_schedule(cursor, jsgh)
+        return enrolled_courses
+    return jsonify({"status": "failed", "message": "Invalid action"})
 
 
 # 管理员用户接口
