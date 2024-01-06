@@ -64,6 +64,7 @@ def login(cursor):
 def student_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
+    print(data)
     xh = current_user
 
     # 判断是课程查询请求还是选课请求
@@ -75,6 +76,7 @@ def student_enroll(cursor, current_user):
     if action == "get_schedule":
         # 课程查询请求
         partial_schedule = user_manager.get_partial_schedule(
+            cursor=cursor,
             start_position=0,
             length=20,
             kch=data["course_info"]["kch"],
@@ -84,6 +86,7 @@ def student_enroll(cursor, current_user):
             jsxm=data["course_info"]["jsxm"],
             sksj=data["course_info"]["sksj"],
         )
+        print(partial_schedule)
         return partial_schedule
 
     elif action == "enroll":

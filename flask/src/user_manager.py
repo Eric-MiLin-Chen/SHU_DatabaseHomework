@@ -257,7 +257,13 @@ class UserManager:
             }
             for row in rows
         ]
-
+        print(
+            {
+                "total_count": total_count,
+                "course_info": partial_schedule,
+                "status": "success",
+            }
+        )
         # 将总数和分页结果一起返回
         return jsonify(
             {
