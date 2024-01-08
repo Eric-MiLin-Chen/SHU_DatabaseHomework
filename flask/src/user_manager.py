@@ -465,44 +465,6 @@ class UserManager:
         except psycopg2.errors.UniqueViolation:
             return jsonify({"status": "failed", "message": "UniqueViolation"})
 
-    # def get_teacher_enrolled_courses(self, cursor, jsgh):
-    #     query = """
-    #         SELECT
-    #             O.kch,
-    #             C.kcm,
-    #             O.sksj,
-    #             C.xf,
-    #             O.jsh,
-    #             C.zdrs
-    #         FROM
-    #             O
-    #         JOIN
-    #             C ON O.kch = C.kch
-    #         WHERE
-    #             O.jsgh = %(jsgh)s;
-    #     """
-    #     parameters = {"jsgh": jsgh}
-    #     cursor.execute(query, parameters)
-    #     rows = cursor.fetchall()
-
-    #     enrolled_courses = [
-    #         {
-    #             "kch": row[0],
-    #             "kcm": row[1],
-    #             "sksj": row[2],
-    #             "xf": row[3],
-    #             "jsh": row[4],
-    #             "zdrs": row[5],
-    #         }
-    #         for row in rows
-    #     ]
-
-    #     return {
-    #         "status": "success",
-    #         "total_count": len(enrolled_courses),
-    #         "course_info": enrolled_courses,
-    #     }
-
     def drop_teacher_course(self, cursor, jsgh, kch, sksj):
         try:
             delete_query = """
