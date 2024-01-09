@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, json
 from flask_cors import CORS
 from config_manager import ConfigManager
 from db_manager import DBManager
@@ -42,12 +42,6 @@ def login(cursor):
         user_type = user_manager.verify_credentials(cursor, username, password)
         if user_type is not None:
             user_info = user_manager.get_user_info(cursor, user_type, username)
-            ans = {
-                "Authorization": auth_manager.generate_token(
-                    username, user_info["user_info"]["role"]
-                ),
-                **user_info,
-            }
             return jsonify(
                 {
                     "Authorization": auth_manager.generate_token(
@@ -254,6 +248,57 @@ def get_teacher_schedule(cursor, current_user):
 
 
 # 管理员用户接口
+@app.route(
+    "/identify_operated_user/",
+    methods=["GET", "POST"],
+    endpoint="/identify_operated_user/",
+)
+@auth_manager.token_required("admin")
+@db_manager.connect_db
+def identify_operated_user(cursor, current_user):
+    data = request.get_json()
+    id = data["user_info"]["id"]
+
+    try:
+        user_type = user_manager.verify_credentials(cursor, id, None, admin_user=True)
+        if user_type is not None:
+            user_info = user_manager.get_user_info(cursor, user_type, id)
+            enrolled_courses = (
+                user_manager.get_student_enrolled_courses(cursor, id)
+                if user_info["role"] == "2"
+                else user_manager.get_teacher_enrolled_courses(cursor, id)
+            )
+            enrolled_courses = enrolled_courses.get_data(as_text=True)
+            enrolled_courses = json.loads(enrolled_courses)
+            return jsonify(
+                {
+                    **user_info,
+                    **enrolled_courses,
+                }
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "status": "failed",
+                        "message": "Invalid credentials",
+                    }
+                ),
+                401,
+            )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "status": "failed",
+                    "message": str(e),
+                }
+            ),
+            500,
+        )
+
+
 @app.route(
     "/manage_course_enroll/",
     methods=["GET", "POST"],
