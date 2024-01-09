@@ -84,7 +84,7 @@
          "status": "success",
          "Authorization": "",
          "user_info": {
-            "username": "",// 学号/工号
+            "id": "",// 学号/工号
             "name": "",    // 姓名，管理员"name": "admin"
             "school": "",
             "level": "",
@@ -286,7 +286,61 @@
 
 4. **管理员用户**
 
-   1. 增删查改课程（包括课程容量/锁课？）
+   1. 获取被操作用户id
+
+      请求：
+
+      ```json
+      {
+         "action": "get_info",
+         "user_info": {
+            "id": "",
+         },
+      }
+      ```
+
+      返回：
+
+      ```json
+      {
+         "status": "success",
+         "user_info": {
+            "id": "",// 学号/工号
+            "name": "",    // 姓名，管理员"name": "admin"
+            "school": "",
+            "level": "",
+            "gender": "",
+            "role": "",    // 用户类型/权限等级
+         },
+         "total_count": (int),
+         // teacher(role = 1)
+         "course_info": [
+            {
+                  "kch": "",
+                  "kcm": "",
+                  "xf": "",
+                  "zdrs": "",
+            },
+            // ...
+         ],
+         // student(role = 2)
+         "course_info": [
+            {
+                  "kch": "",
+                  "kcm": "",
+                  "xf": "",
+                  "jsh": "",
+                  "jsxm": "",
+                  "sksj": "",
+                  "zdrs": "",
+            },
+            // ...
+         ],
+
+      }
+      ```
+
+   2. 增删查改课程
       1. 增加课程
 
          请求：
@@ -302,15 +356,6 @@
                // 没有选择也必须要有
             }, 
          }
-
-         // get_info
-         {
-            "action": "get_info",
-            "user_info": {
-               "id": "",
-            }, 
-         }
-
 
          // enroll
          {
@@ -338,26 +383,6 @@
                      "kcm": "",
                      "xf": "",
                      "zdrs": "",
-               },
-               // ...
-            ],
-            "status": "success",
-         }
-
-         // get_info
-         {
-            "total_count": (int),
-            "course_info": [
-               {
-                     "kch": "",
-                     "kcm": "",
-                     "xf": "",
-                     "sksj": "",
-                     "zdrs": "",
-                     // "student_info":[
-                     //    "xh": "",
-                     //    "xm": "",
-                     // ],
                },
                // ...
             ],
@@ -427,7 +452,7 @@
          }
          ```
 
-   2. 增删查改学生选择课程
+   3. 增删查改学生选择课程
       1. 增加学生选择课程
 
          请求：
@@ -445,14 +470,6 @@
                "sksj": "",
                // 没有选择也必须要有
             }, 
-         }
-
-         // get_info
-         {
-            "action": "get_info",
-            "user_info": {
-               "id": ""
-            },
          }
 
          // enroll
@@ -476,25 +493,6 @@
 
          ```json
          // 成功
-         // 课程查询请求
-         {
-            "total_count": (int),
-            "course_info": [
-               {
-                     "kch": "",
-                     "kcm": "",
-                     "xf": "",
-                     "jsh": "",
-                     "jsxm": "",
-                     "sksj": "",
-                     "zdrs": "",
-               },
-               // ...
-            ],
-            "status": "success",
-         }
-
-         //get_info
          // 课程查询请求
          {
             "total_count": (int),
