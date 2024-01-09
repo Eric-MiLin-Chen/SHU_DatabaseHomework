@@ -10,10 +10,8 @@
    2. 教师用户
       1. 课表查询
    3. 管理员用户
-      1. 增删查改课程（包括课程容量/锁课？）
-      2. 增删查改学生、教师
-      3. 增删查改学生选择课程
-      4. 修改课程最大人数
+      1. 增删课程
+      2. 增删学生选择课程
 
 ## 数据库需求
 
@@ -33,25 +31,25 @@
 
 ### 前后端json格式
 
-| 超属性        | 属性     | 内容类型 | 内容                        | 描述           |
-| ------------- | -------- | -------- | --------------------------- | -------------- |
-| login_info    | username | char     |                             |                |
-|               | password | char     |                             |                |
-| status        |          | char     | success\|failed             |                |
-| user_info     | status   | int      | 用户身份（0学生1老师2管理） |                |
-|               | id       | char     | 学/工号                     |                |
-|               | gender   | char     | 性别                        |                |
-|               | college  | char     | 学院                        |                |
-| Authorization |          | char     | 认证密钥，判断请求是否合法  | Request Header |
-| action        |          | char     | enroll\|drop\|get_schedule  | 选/退/查       |
-| total_count   |          | int      |                             | 查询的课程总数 |
-| course_info   | kch      | char     |                             | 查询：课程号   |
-|               | kcm      | char     |                             | 查询：课程名   |
-|               | xf       | char     |                             | 查询：学分     |
-|               | jsh      | char     |                             | 查询：教师号   |
-|               | jsxm     | char     |                             | 查询：教师姓名 |
-|               | sksj     | char     |                             | 查询：上课时间 |
-| message       |          | char     |                             | 报错信息       |
+| 超属性        | 属性     | 内容类型 | 内容                                 | 描述           |
+| ------------- | -------- | -------- | ------------------------------------ | -------------- |
+| login_info    | username | char     |                                      |                |
+|               | password | char     |                                      |                |
+| status        |          | char     | success\|failed                      |                |
+| user_info     | status   | int      | 用户身份（0学生1老师2管理）          |                |
+|               | id       | char     | 学/工号                              |                |
+|               | gender   | char     | 性别                                 |                |
+|               | college  | char     | 学院                                 |                |
+| Authorization |          | char     | 认证密钥，判断请求是否合法           | Request Header |
+| action        |          | char     | enroll\|drop\|get_schedule\|get_info | 选/退/查       |
+| total_count   |          | int      |                                      | 查询的课程总数 |
+| course_info   | kch      | char     |                                      | 查询：课程号   |
+|               | kcm      | char     |                                      | 查询：课程名   |
+|               | xf       | char     |                                      | 查询：学分     |
+|               | jsh      | char     |                                      | 查询：教师号   |
+|               | jsxm     | char     |                                      | 查询：教师姓名 |
+|               | sksj     | char     |                                      | 查询：上课时间 |
+| message       |          | char     |                                      | 报错信息       |
 
 ### 后端
 
@@ -305,6 +303,15 @@
             }, 
          }
 
+         // get_info
+         {
+            "action": "get_info",
+            "user_info": {
+               "id": "",
+            }, 
+         }
+
+
          // enroll
          {
             "action": "enroll",
@@ -331,6 +338,26 @@
                      "kcm": "",
                      "xf": "",
                      "zdrs": "",
+               },
+               // ...
+            ],
+            "status": "success",
+         }
+
+         // get_info
+         {
+            "total_count": (int),
+            "course_info": [
+               {
+                     "kch": "",
+                     "kcm": "",
+                     "xf": "",
+                     "sksj": "",
+                     "zdrs": "",
+                     // "student_info":[
+                     //    "xh": "",
+                     //    "xm": "",
+                     // ],
                },
                // ...
             ],
@@ -420,6 +447,14 @@
             }, 
          }
 
+         // get_info
+         {
+            "action": "get_info",
+            "user_info": {
+               "id": ""
+            },
+         }
+
          // enroll
          {
             "action": "enroll",
@@ -441,6 +476,25 @@
 
          ```json
          // 成功
+         // 课程查询请求
+         {
+            "total_count": (int),
+            "course_info": [
+               {
+                     "kch": "",
+                     "kcm": "",
+                     "xf": "",
+                     "jsh": "",
+                     "jsxm": "",
+                     "sksj": "",
+                     "zdrs": "",
+               },
+               // ...
+            ],
+            "status": "success",
+         }
+
+         //get_info
          // 课程查询请求
          {
             "total_count": (int),
