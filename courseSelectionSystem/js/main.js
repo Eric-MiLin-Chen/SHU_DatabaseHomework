@@ -1,6 +1,6 @@
 
 var tested = false;        //测试时设置为true，正式使用时设置为false
-var flaskurl = "http://127.0.0.1:5000";
+var flaskurl = "http://127.0.0.1:5001";
 var currentuser;
 setInterval(() => {
     currentuser = document.getElementsByClassName("nav-no")[0].innerHTML;
@@ -41,7 +41,10 @@ document.getElementById("login-submit").onclick = function () {
                 document.getElementById("sschool").innerHTML = res.user_info.school;
                 document.getElementById("sgrade").innerHTML = res.user_info.level;
                 document.getElementById("ssex").innerHTML = res.user_info.gender;
-                turnStudent();
+                // turnStudent();
+                if (res.user_info.role == "1") { turnTeacher(); }
+                else if (res.user_info.role == "2") { turnStudent(); }
+                else if (res.user_info.role == "0") { turnManager(); }
             } else {
                 alert(res.message);
             }
@@ -121,6 +124,7 @@ document.getElementById("admin-drop").onclick = function () {
 document.getElementById("admin-schedule").onclick = function () {
     if (adminChoose == 0) { return; }
     handleChooseArticleItemShow(2);
+    lshNEEDit();
 }
 
 //处理退出
@@ -182,7 +186,17 @@ function handleCourseQuery() {
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
     if (tested) { xhr.open("get", "test.json"); }
-    else { xhr.open("POST", `${flaskurl}/get_schedule/`, true); }
+    else {
+        if (adminChoose == 0) {
+            xhr.open("POST", `${flaskurl}/student_enroll/`, true);
+        }
+        else if (adminChoose == 1) {
+            xhr.open("POST", `${flaskurl}/manage_course_enroll/`, true);
+        }
+        else if (adminChoose == 2) {
+            xhr.open("POST", `${flaskurl}/manage_student_course_enroll/`, true);
+        }
+    }
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", Authorization);
     if (tested) { xhr.send(null); }
@@ -231,7 +245,17 @@ function handleCurrentCourseQuery() {
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
     if (tested) { xhr.open("get", "test.json"); }
-    else { xhr.open("POST", `${flaskurl}/get_schedule/`, true); }
+    else {
+        if (adminChoose == 0) {
+            xhr.open("POST", `${flaskurl}/student_drop/`, true);
+        }
+        else if (adminChoose == 1) {
+            xhr.open("POST", `${flaskurl}/manage_course_drop/`, true);
+        }
+        else if (adminChoose == 2) {
+            xhr.open("POST", `${flaskurl}/manage_student_course_drop/`, true);
+        }
+    }
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", Authorization);
     if (tested) { xhr.send(null); }
@@ -273,7 +297,7 @@ function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
         };
     }
     else if (adminChoose == 1 || adminChoose == 2) {
-        if (action == "enroll") {
+        if (adminChoose == 2) {
             data = {
                 course_info: {
                     kch: kch,
@@ -285,7 +309,19 @@ function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
                 action: action
             }
         }
-        else {
+        else if (adminChoose == 1 && action == "enroll") {
+            data = {
+                course_info: {
+                    kch: kch,
+                    sksj: jshorsksj
+                },
+                user_info: {
+                    id: userid
+                },
+                action: action
+            }
+        }
+        else if (adminChoose == 1 && action == "drop") {
             data = {
                 course_info: {
                     kch: kch,
@@ -302,10 +338,20 @@ function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
     if (action == "enroll") {
-        xhr.open("POST", `${flaskurl}/student_enroll/`, true);
+        if (adminChoose == 0) { xhr.open("POST", `${flaskurl}/student_enroll/`, true); }
+        else if (adminChoose == 1) { xhr.open("POST", `${flaskurl}/manage_course_enroll/`, true); }
+        else if (adminChoose == 2) { xhr.open("POST", `${flaskurl}/manage_student_course_enroll/`, true); }
     }
     if (action == "drop") {
-        xhr.open("POST", `${flaskurl}/drop_course/`, true);
+        if (adminChoose == 0) {
+            xhr.open("POST", `${flaskurl}/student_drop/`, true);
+        }
+        else if (adminChoose == 1) {
+            xhr.open("POST", `${flaskurl}/manage_course_drop/`, true);
+        }
+        else if (adminChoose == 2) {
+            xhr.open("POST", `${flaskurl}/manage_student_course_drop/`, true);
+        }
     }
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", Authorization);
@@ -320,6 +366,7 @@ function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
                     }
                     else {
                         alert("选课成功！");
+                        handleCurrentCourseQuery();
                     }
                 }
                 if (action == "drop") {
@@ -343,7 +390,10 @@ function handleScheduleQuery(quiryType) {
     var dataStr = JSON.stringify(data);
     var xhr = new XMLHttpRequest();
     if (tested) { xhr.open("get", "test.json"); }
-    else { xhr.open("POST", `${flaskurl}/get_schedule/`, true); }
+    else {
+        if (quiryType == 1) { xhr.open("POST", `${flaskurl}/get_teacher_schedule/`, true); }
+        else if (quiryType == 2) { xhr.open("POST", `${flaskurl}/get_student_schedule/`, true); }
+    }
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Authorization", Authorization);
     if (tested) { xhr.send(null); }
@@ -369,7 +419,7 @@ function handleScheduleQuery(quiryType) {
     }
 }
 
-var userid;
+var userid = "";
 //管理员添加学号/工号查询
 function appendIdSelect() {
     let newdiv = document.createElement("div");
@@ -379,6 +429,7 @@ function appendIdSelect() {
     newspan.innerHTML = "学号/工号：";
     newbutton.innerHTML = "查询";
     newinput.style.marginRight = "0.5vw";
+    newinput.value = userid;
     newdiv.appendChild(newspan);
     newdiv.appendChild(newinput);
     newdiv.appendChild(newbutton);
@@ -400,7 +451,7 @@ function appendIdSelect() {
         var dataStr = JSON.stringify(data);
         var xhr = new XMLHttpRequest();
         if (tested) { xhr.open("get", "test.json"); }
-        else { xhr.open("POST", `${flaskurl}/get_info/`, true); }
+        else { xhr.open("POST", `${flaskurl}/identify_operated_user/`, true); }
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.setRequestHeader("Authorization", Authorization);
         if (tested) { xhr.send(null); }
@@ -441,9 +492,9 @@ function showEnrollInquiry(courseInfo, thead) {
             infoarray = [courseInfo[i].kch, courseInfo[i].kcm, courseInfo[i].xf, courseInfo[i].jsh, courseInfo[i].jsxm, courseInfo[i].sksj, courseInfo[i].zdrs]
         }
         let newtr = document.createElement("tr");
-        for (let i = 0; i < infoarray.length + 1; i++) {
+        for (let j = 0; j < infoarray.length + 1; j++) {
             let newth = document.createElement("th");
-            if (i == infoarray.length) {
+            if (j == infoarray.length) {
                 let newbutton = document.createElement("button");
                 if (adminChoose == 1) { newbutton.innerHTML = "开课"; }
                 else { newbutton.innerHTML = "选课"; }
@@ -454,7 +505,7 @@ function showEnrollInquiry(courseInfo, thead) {
                 newth.appendChild(newbutton);
             }
             else {
-                newth.innerHTML = infoarray[i];
+                newth.innerHTML = infoarray[j];
             }
             newth.style.width = `${100 / infoarray.length}%`;
             newtr.appendChild(newth);
@@ -479,9 +530,9 @@ function showDropInquiry(courseInfo, thead) {
             infoarray = [courseInfo[i].kch, courseInfo[i].kcm, courseInfo[i].xf, courseInfo[i].jsh, courseInfo[i].jsxm, courseInfo[i].sksj, courseInfo[i].zdrs]
         }
         let newtr = document.createElement("tr");
-        for (let i = 0; i < infoarray.length + 1; i++) {
+        for (let j = 0; j < infoarray.length + 1; j++) {
             let newth = document.createElement("th");
-            if (i == infoarray.length) {
+            if (j == infoarray.length) {
                 let newbutton = document.createElement("button");
                 if (adminChoose == 1) { newbutton.innerHTML = "关课"; }
                 else { newbutton.innerHTML = "退课"; }
@@ -492,7 +543,7 @@ function showDropInquiry(courseInfo, thead) {
                 newth.appendChild(newbutton);
             }
             else {
-                newth.innerHTML = infoarray[i];
+                newth.innerHTML = infoarray[j];
             }
             newth.style.width = `${100 / infoarray.length}%`;
             newtr.appendChild(newth);
@@ -505,6 +556,10 @@ function showDropInquiry(courseInfo, thead) {
 function showScheduleInquiry(quiryType, courseInfo, thead) {
     document.getElementById("currentSelectedResult2").innerHTML = "";
     handleChangeThead("schedule", thead);
+    let scheduleitems=document.getElementsByClassName("schedule-item");
+    for(let j=0;j<scheduleitems.length;j++){
+        scheduleitems[j].innerHTML="";
+    }
     for (let i = 0; i < courseInfo.length; i++) {
         let infoarray = [];
         if (quiryType == 1) {
@@ -520,9 +575,9 @@ function showScheduleInquiry(quiryType, courseInfo, thead) {
             infoarray = [xuhao[i], courseInfo[i].kch, courseInfo[i].kcm, courseInfo[i].xf, courseInfo[i].jsh, courseInfo[i].jsxm, courseInfo[i].sksj, courseInfo[i].zdrs]
         }
         let newtr = document.createElement("tr");
-        for (let i = 0; i < infoarray.length; i++) {
+        for (let j = 0; j < infoarray.length; j++) {
             let newth = document.createElement("th");
-            newth.innerHTML = infoarray[i];
+            newth.innerHTML = infoarray[j];
             newth.style.width = `${100 / infoarray.length}%`;
             newtr.appendChild(newth);
         }
@@ -544,6 +599,39 @@ function showScheduleInquiry(quiryType, courseInfo, thead) {
 
 
 
+function lshNEEDit() {
+    var data = {
+        action: "get_info",
+        user_info: {
+            id: userid
+        }
+    };
+    var dataStr = JSON.stringify(data);
+    var xhr = new XMLHttpRequest();
+    if (tested) { xhr.open("get", "test.json"); }
+    else { xhr.open("POST", `${flaskurl}/identify_operated_user/`, true); }
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
+    if (tested) { xhr.send(null); }
+    else { xhr.send(dataStr); }
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            var res = JSON.parse(xhr.responseText);
+            if (res.status == "success") {
+                if (res.user_info.role == "1") {
+                    adminChoose = 1;
+                    showScheduleInquiry(3, res.course_info, ["序号", "课程号", "课程名", "学分", "上课时间", "最大人数"]);
+                }
+                if (res.user_info.role == "2") {
+                    adminChoose = 2;
+                    showScheduleInquiry(4, res.course_info, ["序号", "课程号", "课程名", "学分", "教师号", "教师姓名", "上课时间", "最大人数"]);
+                }
+            } else {
+                alert(res.message);
+            }
+        }
+    }
+}
 
 /**
 
