@@ -50,7 +50,7 @@
         </nav>
         <aside class="aside-box">
             <div class="aside-sinfo">
-                <h1>学生信息</h1>
+                <h1>用户信息</h1>
                 <p>姓名：<span id="sname"></span></p>
                 <p>学校：<span id="sschool"></span></p>
                 <p>年级：<span id="sgrade"></span></p>
@@ -84,9 +84,9 @@
                             style="float: right;transform: scaleX(2);">V&ensp;</span>
                     </div>
                     <ul class="menu-select">
-                        <li id="admin-alter-course"><a>增删查改课程</a></li>
-                        <li id="admin-alter-student"><a>增删查改学生</a></li>
-                        <li id="admin-alter-sc"><a>增删查改学生选择课程</a></li>
+                        <li id="admin-enroll"><a>选课课程查询</a></li>
+                        <li id="admin-drop"><a>删课</a></li>
+                        <li id="admin-schedule"><a>查询课表</a></li>
                     </ul>
                     <div class="menu-mask"></div>
                 </div>
@@ -135,7 +135,7 @@
                     <div class="box-inquiryResult-table">
                         <table>
                             <thead>
-                                <tr>
+                                <tr id="inquiryTableTheadTr">
                                     <th>课程号</th>
                                     <th>课程名</th>
                                     <th>学分</th>
@@ -159,7 +159,7 @@
                     <div class="box-currentSelected-table">
                         <table>
                             <thead>
-                                <tr>
+                                <tr id="dropTableTheadTr">
                                     <th>课程号</th>
                                     <th>课程名</th>
                                     <th>学分</th>
@@ -183,7 +183,7 @@
                     <div class="box-schedule-table">
                         <table>
                             <thead>
-                                <tr>
+                                <tr id="scheduleTableTheadTr">
                                     <th>序号</th>
                                     <th>课程号</th>
                                     <th>课程名</th>
