@@ -20,7 +20,7 @@ user_manager = UserManager(db_manager, auth_manager)
 
 
 # 登录路由
-@app.route("/login/", methods=["POST"])
+@app.route("/login/", methods=["POST"], endpoint="/login/")
 @db_manager.connect_db
 def login(cursor):
     data = request.get_json()
@@ -164,7 +164,7 @@ def student_drop(cursor, current_user):
 
     elif action == "drop":
         # 选课请求
-        response = user_manager.drop_course(
+        response = user_manager.drop_student_course(
             cursor=cursor,
             xh=xh,
             kch=data["course_info"]["kch"],
@@ -258,6 +258,7 @@ def get_teacher_schedule(cursor, current_user):
 def identify_operated_user(cursor, current_user):
     data = request.get_json()
     id = data["user_info"]["id"]
+    print(data)
 
     try:
         user_type = user_manager.verify_credentials(cursor, id, None, admin_user=True)
@@ -265,11 +266,12 @@ def identify_operated_user(cursor, current_user):
             user_info = user_manager.get_user_info(cursor, user_type, id)
             enrolled_courses = (
                 user_manager.get_student_enrolled_courses(cursor, id)
-                if user_info["role"] == "2"
+                if user_info["user_info"]["role"].strip() == "2"
                 else user_manager.get_teacher_enrolled_courses(cursor, id)
             )
             enrolled_courses = enrolled_courses.get_data(as_text=True)
             enrolled_courses = json.loads(enrolled_courses)
+            print(enrolled_courses)
             return jsonify(
                 {
                     **user_info,
@@ -309,6 +311,7 @@ def identify_operated_user(cursor, current_user):
 def manage_course_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
+    print(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -338,7 +341,7 @@ def manage_course_enroll(cursor, current_user):
             cursor,
             jsgh=data["user_info"]["id"],
             kch=data["course_info"]["kch"],
-            sksj=data["course_info"]["sksj"],
+            # sksj=data["course_info"]["sksj"],
         )
         return response
 
@@ -416,7 +419,7 @@ def manage_student_course_enroll(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        partial_schedule = user_manager.get_partial_course(
+        partial_schedule = user_manager.get_partial_open_course(
             cursor=cursor,
             start_position=0,
             length=40,
@@ -432,7 +435,7 @@ def manage_student_course_enroll(cursor, current_user):
 
     elif action == "enroll":
         # 选课请求
-        response = user_manager.enroll_student(
+        response = user_manager.enroll_student_course(
             cursor,
             xh=data["user_info"]["id"],
             kch=data["course_info"]["kch"],
@@ -466,7 +469,7 @@ def manage_student_course_drop(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        enrolled_courses = user_manager.get_teacher_s(
+        enrolled_courses = user_manager.get_student_enrolled_courses(
             cursor=cursor,
             xh=data["user_info"]["id"],
         )
@@ -476,7 +479,7 @@ def manage_student_course_drop(cursor, current_user):
         # 退课请求
         response = user_manager.drop_student_course(
             cursor=cursor,
-            jsgh=data["user_info"]["id"],
+            xh=data["user_info"]["id"],
             kch=data["course_info"]["kch"],
             jsh=data["course_info"]["jsh"],
         )

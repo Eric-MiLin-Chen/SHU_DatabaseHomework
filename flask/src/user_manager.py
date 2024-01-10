@@ -1,5 +1,6 @@
 from flask import jsonify
 import psycopg2
+import random
 
 
 class UserManager:
@@ -430,9 +431,16 @@ class UserManager:
 
         return result
 
-    def enroll_teacher_course(self, cursor, jsgh, kch, sksj):
+    def enroll_teacher_course(self, cursor, jsgh, kch, sksj=None):
         try:
             # 判断同教师在相同sksj中是否已有课程
+            day = ["一", "二", "三", "四", "五"]
+
+            if sksj == None:
+                time = random.randint(1, 6) * 2 - 1
+                sksj = f"{day[random.randint(0, 4)]}{time}-{time+1}"
+                print(sksj)
+
             check_course_query = "SELECT COUNT(*) FROM O WHERE jsgh = %s AND sksj = %s"
             cursor.execute(check_course_query, (jsgh, sksj))
             existing_courses_count = cursor.fetchone()[0]
@@ -451,7 +459,7 @@ class UserManager:
                 new_jsgh += 1
 
             # 插入记录到表O
-            insert_query = "INSERT INTO O (jsgh, kch, jsh, sksj) VALUES (%(jsgh)s, %{kch}s, %(jsh)s, %(sksj)s)"
+            insert_query = "INSERT INTO O (jsgh, kch, jsh, sksj) VALUES (%(jsgh)s, %(kch)s, %(jsh)s, %(sksj)s)"
             parameters = {
                 "jsgh": jsgh,
                 "kch": kch,
