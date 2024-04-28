@@ -24,32 +24,35 @@
 4. 学院库I
    学院号、学院名称
 5. 课表库E
-   学号、课程号、教师工号
+   学号、课程号、教师工号、成绩
 6. 密码库P
 
    学/工号、密码
 
 ### 前后端json格式
 
-| 超属性        | 属性     | 内容类型 | 内容                                 | 描述           |
-| ------------- | -------- | -------- | ------------------------------------ | -------------- |
-| login_info    | username | char     |                                      |                |
-|               | password | char     |                                      |                |
-| status        |          | char     | success\|failed                      |                |
-| user_info     | status   | int      | 用户身份（0学生1老师2管理）          |                |
-|               | id       | char     | 学/工号                              |                |
-|               | gender   | char     | 性别                                 |                |
-|               | college  | char     | 学院                                 |                |
-| Authorization |          | char     | 认证密钥，判断请求是否合法           | Request Header |
-| action        |          | char     | enroll\|drop\|get_schedule\|get_info | 选/退/查       |
-| total_count   |          | int      |                                      | 查询的课程总数 |
-| course_info   | kch      | char     |                                      | 查询：课程号   |
-|               | kcm      | char     |                                      | 查询：课程名   |
-|               | xf       | char     |                                      | 查询：学分     |
-|               | jsh      | char     |                                      | 查询：教师号   |
-|               | jsxm     | char     |                                      | 查询：教师姓名 |
-|               | sksj     | char     |                                      | 查询：上课时间 |
-| message       |          | char     |                                      | 报错信息       |
+| 超属性        | 属性     | 内容类型 | 内容                                 | 描述                                       |
+| ------------- | -------- | -------- | ------------------------------------ | ------------------------------------------ |
+| Authorization |          | char     | (HS256)                              | 认证密钥，判断请求是否合法(Request Header) |
+| status        |          | char     | success\|failed                      |                                            |
+| message       |          | char     | (string)                             | 报错信息                                   |
+| action        |          | char     | enroll\|drop\|get_schedule\|get_info | 选/退/查                                   |
+| login_info    | username | char     | (string)                             |                                            |
+|               | password | char     | (HS256)                              |                                            |
+| user_info     | status   | int      | 0\|1\|2                              | 用户身份（0学生1老师2管理）                |
+|               | id       | char     |                                      | 学/工号                                    |
+|               | gender   | char     |                                      | 性别                                       |
+|               | college  | char     |                                      | 学院                                       |
+| total_count   |          | int      |                                      | 查询的总数                                 |
+| course_info   | kch      | char     |                                      | 查询：课程号                               |
+|               | kcm      | char     |                                      | 查询：课程名                               |
+|               | xf       | char     |                                      | 查询：学分                                 |
+|               | jsh      | char     |                                      | 查询：教师号                               |
+|               | jsxm     | char     |                                      | 查询：教师姓名                             |
+|               | sksj     | char     |                                      | 查询：上课时间                             |
+| student_info  | xh       | char     |                                      | 学号                                       |
+|               | xm       | char     |                                      | 姓名                                       |
+|               | cj       | char     |                                      | 成绩                                       |
 
 ### 后端
 
@@ -256,7 +259,7 @@
       {
          "action": "get_schedule",
       }
-
+      
       ```
 
       返回：
@@ -283,6 +286,80 @@
          ], 
       }
       ```
+
+   2. 成绩录入
+
+       请求：
+
+       ```json
+       // get_schedule时不检查user_info
+       {
+          "action": "get_schedule",
+       }
+       
+       // get_info
+       {
+          "action": "get_info",
+          "course_info": {
+              "kch": "",
+              // "kcm": "",
+              // "sksj": "",
+              // "sksj": "",
+              // "zdrs": "",
+             },
+       }
+       
+       // enroll
+       {
+          "action": "enroll",
+          "course_info": {
+             "kch": "",  
+          }, 
+          "student_info": {
+             "xh": "",
+             // "xm": "",
+             "cj": "",
+          },
+       }
+       
+       ```
+       
+       返回：
+       
+       ```json
+       // get_schedule
+       {
+          "status": "success",
+          "total_count": (int),
+          "course_info": [
+             {
+                "kch": "",
+                "kcm": "",
+                "sksj": "",
+                "sksj": "",
+                "zdrs": "",
+             },
+          ], 
+       }
+       
+       // get_info
+       {
+           "status": "success",
+           "total_count": (int),
+           "student_info": [
+           	{
+        	       "xh": "",
+                  "xm": "",
+                  "cj": "",
+               },
+           ],
+       }
+       
+       // enroll
+       {
+           "status": "success"
+       }
+       ```
 
 4. **管理员用户**
 
@@ -407,7 +484,7 @@
                "id": "",
                },
          }
-
+         
          // drop
          {
             "action": "drop",
@@ -445,7 +522,7 @@
             ],
             "status": "success",
          }
-
+         
          // 选课请求
          {
             "status": "success",
@@ -529,7 +606,7 @@
                "id": "",
                },
          }
-
+         
          // drop
          {
             "action": "drop",
@@ -568,7 +645,7 @@
             ],
             "status": "success",
          }
-
+         
          // 选课请求
          {
             "status": "success",
