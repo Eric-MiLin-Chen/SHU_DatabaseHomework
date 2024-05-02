@@ -157,9 +157,7 @@ def student_drop(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        enrolled_courses = user_manager.get_student_enrolled_courses(
-            cursor=cursor, xh=xh
-        )
+        enrolled_courses = user_manager.get_student_schedule(cursor=cursor, xh=xh)
         return enrolled_courses
 
     elif action == "drop":
@@ -203,7 +201,7 @@ def get_student_schedule(cursor, current_user):
 
     if action == "get_schedule":
         # 调用已有的函数获取已选课程信息
-        enrolled_courses = user_manager.get_student_enrolled_courses(cursor, xh)
+        enrolled_courses = user_manager.get_student_schedule(cursor, xh)
         # 返回已选课程信息的 JSON 响应
         return enrolled_courses
     return jsonify(
@@ -237,8 +235,61 @@ def get_teacher_schedule(cursor, current_user):
     action = data["action"]
 
     if action == "get_schedule":
-        enrolled_courses = user_manager.get_teacher_enrolled_courses(cursor, jsgh)
+        enrolled_courses = user_manager.get_teacher_schedule(cursor, jsgh)
         return enrolled_courses
+    return jsonify(
+        {
+            "status": "failed",
+            "message": "Invalid action",
+        }
+    )
+
+
+# 教师录入成绩路由
+@app.route(
+    "/teacher_grade/",
+    methods=["POST"],
+    endpoint="/teacher_grade/",
+)
+@auth_manager.token_required("teacher")
+@db_manager.connect_db()
+def manage_student_grade(cursor, current_user):
+    data = request.get_json()
+    jsgh = current_user
+    print(data)
+
+    if "action" not in data:
+        return jsonify(
+            {
+                "status": "failed",
+                "message": "Invalid request format",
+            }
+        )
+
+    action = data["action"]
+
+    if action == "get_schedule":
+        enrolled_courses = user_manager.get_teacher_schedule(cursor, jsgh)
+        return enrolled_courses
+
+    elif action == "get_info":
+        student_info = user_manager.get_student_info(
+            cursor,
+            jsgh,
+            kch=data["course_info"]["kch"],
+        )
+        return student_info
+
+    elif action == "enroll":
+        response = user_manager.manage_student_score(
+            cursor,
+            jsgh=jsgh,
+            kch=data["course_info"]["kch"],
+            xh=data["student_info"]["xh"],
+            cj=data["student_info"]["cj"],
+        )
+        return response
+
     return jsonify(
         {
             "status": "failed",
@@ -265,9 +316,9 @@ def identify_operated_user(cursor, current_user):
         if user_type is not None:
             user_info = user_manager.get_user_info(cursor, user_type, id)
             enrolled_courses = (
-                user_manager.get_student_enrolled_courses(cursor, id)
+                user_manager.get_student_schedule(cursor, id)
                 if user_info["user_info"]["role"].strip() == "2"
-                else user_manager.get_teacher_enrolled_courses(cursor, id)
+                else user_manager.get_teacher_schedule(cursor, id)
             )
             enrolled_courses = enrolled_courses.get_data(as_text=True)
             enrolled_courses = json.loads(enrolled_courses)
@@ -376,7 +427,7 @@ def manage_course_drop(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        enrolled_courses = user_manager.get_teacher_enrolled_courses(
+        enrolled_courses = user_manager.get_teacher_schedule(
             cursor=cursor,
             jsgh=data["user_info"]["id"],
         )
@@ -469,7 +520,7 @@ def manage_student_course_drop(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        enrolled_courses = user_manager.get_student_enrolled_courses(
+        enrolled_courses = user_manager.get_student_schedule(
             cursor=cursor,
             xh=data["user_info"]["id"],
         )

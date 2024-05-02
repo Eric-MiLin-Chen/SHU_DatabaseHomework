@@ -117,7 +117,7 @@ class UserManager:
         except Exception as e:
             return jsonify({"status": "failed", "message": str(e)})
 
-    def get_student_enrolled_courses(self, cursor, xh):
+    def get_student_schedule(self, cursor, xh):
         query = """
             SELECT
                 E.kch,
@@ -282,24 +282,18 @@ class UserManager:
 
     # 教师方法
 
-    def get_teacher_enrolled_courses(self, cursor, jsgh):
+    def get_teacher_schedule(self, cursor, jsgh):
         query = """
             SELECT
                 C.kch,
                 C.kcm,
                 O.sksj,
-                E.xh AS student_id,
-                S.xm AS student_name,
                 C.xf,
                 C.zdrs
             FROM
                 O
             JOIN
                 C ON O.kch = C.kch
-            LEFT JOIN
-                E ON O.kch = E.kch
-            LEFT JOIN
-                S ON E.xh = S.xh
             WHERE
                 O.jsgh = %(jsgh)s;
         """
@@ -311,7 +305,7 @@ class UserManager:
 
         teacher_schedule = {}
         for row in rows:
-            kch, kcm, sksj, student_id, student_name, xf, zdrs = row
+            kch, kcm, sksj, xf, zdrs = row
             if kch not in teacher_schedule:
                 teacher_schedule[kch] = {
                     "kch": kch,
@@ -319,11 +313,8 @@ class UserManager:
                     "sksj": sksj,
                     "xf": xf,
                     "zdrs": zdrs,
-                    "student_info": [],
+                    # "student_info": [],
                 }
-            teacher_schedule[kch]["student_info"].append(
-                {"xh": student_id, "xm": student_name}
-            )
 
         return jsonify(
             {
@@ -332,6 +323,123 @@ class UserManager:
                 "course_info": list(teacher_schedule.values()),
             }
         )
+
+    def get_student_info(self, cursor, jsgh, kch):
+        query = """
+            SELECT
+                E.xh,
+                S.xm,
+                E.cj
+            FROM
+                E
+            JOIN
+                S ON E.xh = S.xh
+            WHERE
+                E.kch = %(kch)s AND E.jsh = %(jsgh)s;
+        """
+
+        parameters = {"jsgh": jsgh, "kch": kch}
+
+        cursor.execute(query, parameters)
+        rows = cursor.fetchall()
+
+        student_info = []
+        for row in rows:
+            xh, xm, cj = row
+            student_info.append(
+                {
+                    "xh": xh,
+                    "xm": xm,
+                    "cj": cj,
+                }
+            )
+
+        return jsonify(
+            {
+                "status": "success",
+                "total": len(student_info),
+                "student_info": student_info,
+            }
+        )
+
+    def manage_student_score(self, cursor, jsgh, kch, xh, cj):
+        try:
+            get_jsh_query = "SELECT jsh FROM O WHERE jsgh = %s AND kch = %s"
+            parameters = (jsgh, kch)
+
+            cursor.execute(get_jsh_query, parameters)
+            rows = cursor.fetchall()
+
+            jsh = None
+            if len(rows) == 0:
+                return jsonify(
+                    {"status": "failed", "message": "No matching record found"}
+                )
+            else:
+                jsh = rows[0][0]
+
+            insert_query = """
+                INSERT INTO E (xh, kch, jsh, cj)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (xh, kch) DO UPDATE
+                SET cj = EXCLUDED.cj;
+            """
+            parameters = (xh, kch, jsh, cj)
+            cursor.execute(insert_query, parameters)
+            return jsonify({"status": "success"})
+        except psycopg2.errors.UniqueViolation:
+            return jsonify({"status": "failed", "message": "UniqueViolation"})
+
+    # def get_teacher_enrolled_courses(self, cursor, jsgh):
+    #     query = """
+    #         SELECT
+    #             C.kch,
+    #             C.kcm,
+    #             O.sksj,
+    #             E.xh AS student_id,
+    #             S.xm AS student_name,
+    #             C.xf,
+    #             C.zdrs
+    #         FROM
+    #             O
+    #         JOIN
+    #             C ON O.kch = C.kch
+    #         LEFT JOIN
+    #             E ON O.kch = E.kch
+    #         LEFT JOIN
+    #             S ON E.xh = S.xh
+    #         WHERE
+    #             O.jsgh = %(jsgh)s;
+    #     """
+
+    #     parameters = {"jsgh": jsgh}
+
+    #     cursor.execute(query, parameters)
+    #     rows = cursor.fetchall()
+
+    #     teacher_schedule = {}=
+    #     for row in rows:
+    #         kch, kcm, sksj, student_id, student_name, xf, zdrs = row
+    #         if kch not in teacher_schedule:
+    #             teacher_schedule[kch] = {
+    #                 "kch": kch,
+    #                 "kcm": kcm,
+    #                 "sksj": sksj,
+    #                 "xf": xf,
+    #                 "zdrs": zdrs,
+    #                 "student_info": [],
+    #             }
+    #         teacher_schedule[kch]["student_info"].append(
+    #             {"xh": student_id, "xm": student_name}
+    #         )
+
+    #     return jsonify(
+    #         {
+    #             "status": "success",
+    #             "total_courses": len(teacher_schedule),
+    #             "course_info": list(teacher_schedule.values()),
+    #         }
+    #     )
 
     # 管理员方法
 
