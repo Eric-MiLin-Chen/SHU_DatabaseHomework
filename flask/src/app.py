@@ -252,7 +252,7 @@ def get_teacher_schedule(cursor, current_user):
     endpoint="/teacher_grade/",
 )
 @auth_manager.token_required("teacher")
-@db_manager.connect_db()
+@db_manager.connect_db
 def manage_student_grade(cursor, current_user):
     data = request.get_json()
     jsgh = current_user
