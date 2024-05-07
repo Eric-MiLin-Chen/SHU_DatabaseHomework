@@ -39,7 +39,7 @@
 | action        |          | char     | enroll\|drop\|get_schedule\|get_info | 选/退/查                                   |
 | login_info    | username | char     | (string)                             |                                            |
 |               | password | char     | (HS256)                              |                                            |
-| user_info     | status   | int      | 0\|1\|2                              | 用户身份（0学生1老师2管理）                |
+| user_info     | role     | int      | 0\|1\|2                              | 用户身份（0学生1老师2管理）                |
 |               | id       | char     |                                      | 学/工号                                    |
 |               | gender   | char     |                                      | 性别                                       |
 |               | college  | char     |                                      | 学院                                       |
@@ -426,6 +426,9 @@
          // get_schedule
          {
             "action": "get_schedule",
+            "user_info": {
+               "role": "",
+            },
             "course_info": {
                "kch": "",
                "kcm": "",
@@ -433,7 +436,7 @@
                // 没有选择也必须要有
             }, 
          }
-
+         
          // enroll
          {
             "action": "enroll",
@@ -446,9 +449,9 @@
             }, 
          }
          ```
-
+      
          返回：
-
+      
          ```json
          // 成功
          // 课程查询请求
@@ -465,17 +468,17 @@
             ],
             "status": "success",
          }
-
+         
          // 选课请求
          {
             "status": "success",
          }
          ```
-
+      
       2. 删除课程
-
+      
          请求：
-
+      
          ```json
          // get_schedule
          {
@@ -498,9 +501,9 @@
             }, 
          }
          ```
-
+      
          返回：
-
+      
          ```json
          // 成功
          // 课程查询请求
@@ -528,16 +531,19 @@
             "status": "success",
          }
          ```
-
+      
    3. 增删查改学生选择课程
       1. 增加学生选择课程
-
+   
          请求：
-
+   
          ```json
          // get_schedule
          {
             "action": "get_schedule",
+            "user_info": {
+                "role": "",
+            },
             "course_info": {
                "kch": "",
                "kcm": "",
@@ -548,7 +554,7 @@
                // 没有选择也必须要有
             }, 
          }
-
+         
          // enroll
          {
             "action": "enroll",
@@ -565,9 +571,9 @@
             }, 
          }
          ```
-
+      
          返回：
-
+      
          ```json
          // 成功
          // 课程查询请求
@@ -587,17 +593,17 @@
             ],
             "status": "success",
          }
-
+         
          // 选课请求
          {
             "status": "success",
          }
          ```
-
+      
       2. 删除学生选择课程
-
+      
          请求：
-
+      
          ```json
          // get_schedule
          {
@@ -623,9 +629,9 @@
             }, 
          }
          ```
-
+      
          返回：
-
+      
          ```json
          // 成功
          // 课程查询请求
