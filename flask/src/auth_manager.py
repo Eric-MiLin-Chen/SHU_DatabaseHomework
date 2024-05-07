@@ -45,7 +45,7 @@ class AuthManager:
                         jsonify({"status": "failed", "message": "Token is invalid!"}),
                         401,
                     )
-                return func(current_user=current_user, *args, **kwargs)
+                return func(*args, current_user=current_user, **kwargs)
 
             return decorated
 

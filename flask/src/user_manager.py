@@ -1,6 +1,7 @@
 from flask import jsonify
 import psycopg2
 import random
+from pprint import pprint
 
 
 class UserManager:
@@ -50,7 +51,7 @@ class UserManager:
 
     def __get_teacher_info(self, cursor, username, user_type):
         """获取教师信息"""
-        teacher_query = "SELECT T.jsgh, T.jsxm, T.jszc, T.xb, I.xymc FROM T, I WHERE jsgh = %s AND T.xyh = I.xyh"
+        teacher_query = "SELECT T.jsgh, T.jsxm, I.xymc, T.jszc, T.xb FROM T, I WHERE jsgh = %s AND T.xyh = I.xyh"
         cursor.execute(teacher_query, (username,))
         user_info = cursor.fetchone()
         return {
@@ -58,28 +59,15 @@ class UserManager:
             "user_info": {
                 "id": user_info[0],
                 "name": user_info[1],
-                "school": user_info[4],
-                "level": user_info[2],
-                "gender": user_info[3],
+                "school": user_info[2],
+                "level": user_info[3],
+                "gender": user_info[4],
                 "role": user_type,
             },
         }
 
     def __get_admin_info(self, cursor, username, user_type):
-        """获取管理员信息（如果需要）"""
-        # 如果管理员有特定信息需要返回，可以在这里添加查询逻辑
-        # 目前只返回用户类型
-        return {
-            "status": "success",
-            "user_info": {
-                "id": username,
-                "name": "admin",
-                "school": "",
-                "level": "",
-                "gender": "",
-                "role": user_type,
-            },
-        }
+        return self.__get_teacher_info(cursor, username, user_type)
 
     # 学生方法
 
@@ -132,7 +120,7 @@ class UserManager:
             JOIN
                 C ON E.kch = C.kch
             JOIN
-                O ON E.kch = O.kch
+                O ON E.kch = O.kch AND O.jsh = E.jsh
             JOIN
                 T ON O.jsgh = T.jsgh
             WHERE
@@ -264,7 +252,7 @@ class UserManager:
             }
             for row in rows
         ]
-        print(
+        pprint(
             {
                 "total_count": total_count,
                 "course_info": partial_schedule,
@@ -334,8 +322,10 @@ class UserManager:
                 E
             JOIN
                 S ON E.xh = S.xh
+            JOIN
+                O ON O.jsgh = %(jsgh)s
             WHERE
-                E.kch = %(kch)s AND E.jsh = %(jsgh)s;
+                E.kch = %(kch)s AND E.jsh = O.jsh
         """
 
         parameters = {"jsgh": jsgh, "kch": kch}
@@ -353,7 +343,7 @@ class UserManager:
                     "cj": cj,
                 }
             )
-
+        pprint(student_info)
         return jsonify(
             {
                 "status": "success",
@@ -376,95 +366,39 @@ class UserManager:
                     {"status": "failed", "message": "No matching record found"}
                 )
             else:
-                jsh = rows[0][0]
+                jsh = rows[0]
 
             insert_query = """
-                INSERT INTO E (xh, kch, jsh, cj)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (xh, kch) DO UPDATE
-                SET cj = EXCLUDED.cj;
+                UPDATE E SET cj = %(cj)s WHERE xh = %(xh)s AND kch = %(kch)s;
             """
-            parameters = (xh, kch, jsh, cj)
+            parameters = {"xh": xh, "kch": kch, "jsh": jsh, "cj": cj}
             cursor.execute(insert_query, parameters)
             return jsonify({"status": "success"})
         except psycopg2.errors.UniqueViolation:
             return jsonify({"status": "failed", "message": "UniqueViolation"})
 
-    # def get_teacher_enrolled_courses(self, cursor, jsgh):
-    #     query = """
-    #         SELECT
-    #             C.kch,
-    #             C.kcm,
-    #             O.sksj,
-    #             E.xh AS student_id,
-    #             S.xm AS student_name,
-    #             C.xf,
-    #             C.zdrs
-    #         FROM
-    #             O
-    #         JOIN
-    #             C ON O.kch = C.kch
-    #         LEFT JOIN
-    #             E ON O.kch = E.kch
-    #         LEFT JOIN
-    #             S ON E.xh = S.xh
-    #         WHERE
-    #             O.jsgh = %(jsgh)s;
-    #     """
-
-    #     parameters = {"jsgh": jsgh}
-
-    #     cursor.execute(query, parameters)
-    #     rows = cursor.fetchall()
-
-    #     teacher_schedule = {}=
-    #     for row in rows:
-    #         kch, kcm, sksj, student_id, student_name, xf, zdrs = row
-    #         if kch not in teacher_schedule:
-    #             teacher_schedule[kch] = {
-    #                 "kch": kch,
-    #                 "kcm": kcm,
-    #                 "sksj": sksj,
-    #                 "xf": xf,
-    #                 "zdrs": zdrs,
-    #                 "student_info": [],
-    #             }
-    #         teacher_schedule[kch]["student_info"].append(
-    #             {"xh": student_id, "xm": student_name}
-    #         )
-
-    #     return jsonify(
-    #         {
-    #             "status": "success",
-    #             "total_courses": len(teacher_schedule),
-    #             "course_info": list(teacher_schedule.values()),
-    #         }
-    #     )
-
     # 管理员方法
 
-    def get_partial_course(
-        self,
-        cursor,
-        start_position,
-        length=20,
-        kch="",
-        kcm="",
-        xf="",
-    ):
-        # 构建 SQL 查询总数的语句
-        count_query = """
-            SELECT
-                COUNT(*)
-            FROM
-                C
-            JOIN
-                O ON C.kch = O.kch
-            JOIN
-                T ON O.jsgh = T.jsgh
-        """
-
+    def get_course(self, cursor, kch, kcm, xf, role=1):
         # 添加约束条件
+        schedule_query = """
+                SELECT DISTINCT
+                    C.kch,
+                    C.kcm,
+                    O.jsh,
+                    T.jsxm,
+                    O.sksj,
+                    C.xf,
+                    C.zdrs
+                FROM
+                    C
+                JOIN
+                    O ON C.kch = O.kch
+                JOIN
+                    T ON O.jsgh = T.jsgh
+                ORDER BY
+                    C.kch
+        """
         where_conditions = []
         parameters = {}
 
@@ -478,46 +412,51 @@ class UserManager:
             where_conditions.append("C.xf = %(xf)s")
             parameters["xf"] = xf
 
-        if where_conditions:
-            count_query += " WHERE " + " AND ".join(where_conditions)
+        # 构建 SQL 查询的语句
+        # if role == 0:
+        #     schedule_query = """
+        #         SELECT
+        #             C.kch,
+        #             C.kcm,
+        #             O.jsh,
+        #             T.jsxm,
+        #             O.sksj,
+        #             C.xf,
+        #             C.zdrs
+        #         FROM
+        #             C
+        #         JOIN
+        #             O ON C.kch = O.kch
+        #         JOIN
+        #             T ON O.jsgh = T.jsgh
+        #         ORDER BY
+        #             C.kch
+        # """
+        # elif role == 1:
+        #     schedule_query = """
+        #         SELECT DISTINCT
+        #             C.kch,
+        #             C.kcm,
+        #             O.jsh,
+        #             T.jsxm,
+        #             O.sksj,
+        #             C.xf,
+        #             C.zdrs
+        #         FROM
+        #             C
+        #         JOIN
+        #             O ON C.kch = O.kch
+        #         JOIN
+        #             T ON O.jsgh = T.jsgh
+        #         ORDER BY
+        #             C.kch
+        # """
+        # else:
+        #     return
 
-        # 执行总数查询
-        cursor.execute(count_query, parameters)
-        total_count = cursor.fetchone()[0]
-
-        # 构建 SQL 查询分页的语句
-        schedule_query = """
-            SELECT
-                C.kch,
-                C.kcm,
-                O.jsh,
-                T.jsxm,
-                O.sksj,
-                C.xf,
-                C.zdrs
-            FROM
-                C
-            JOIN
-                O ON C.kch = O.kch
-            JOIN
-                T ON O.jsgh = T.jsgh
-        """
         if where_conditions:
             schedule_query += " WHERE " + " AND ".join(where_conditions)
 
-        # 添加排序和分页
-        schedule_query += f"""
-            ORDER BY
-                C.kch
-            OFFSET
-                %(start_position)s
-            LIMIT
-                %(length)s;
-        """
-        parameters["start_position"] = start_position
-        parameters["length"] = length
-
-        # 执行分页查询
         cursor.execute(schedule_query, parameters)
         rows = cursor.fetchall()
         partial_schedule = [
@@ -532,7 +471,7 @@ class UserManager:
 
         # 将总数和分页结果一起返回
         result = {
-            "total_count": total_count,
+            "total_count": len(partial_schedule),
             "course_info": partial_schedule,
             "status": "success",
         }
@@ -547,7 +486,7 @@ class UserManager:
             if sksj == None:
                 time = random.randint(1, 6) * 2 - 1
                 sksj = f"{day[random.randint(0, 4)]}{time}-{time+1}"
-                print(sksj)
+                pprint(sksj)
 
             check_course_query = "SELECT COUNT(*) FROM O WHERE jsgh = %s AND sksj = %s"
             cursor.execute(check_course_query, (jsgh, sksj))

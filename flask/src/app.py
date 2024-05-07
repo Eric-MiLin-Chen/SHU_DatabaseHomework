@@ -4,6 +4,7 @@ from config_manager import ConfigManager
 from db_manager import DBManager
 from auth_manager import AuthManager
 from user_manager import UserManager
+from pprint import pprint
 
 app = Flask(__name__)
 cors = CORS(app, origins="*")
@@ -26,7 +27,7 @@ def login(cursor):
     data = request.get_json()
     username = data["login_info"]["username"]
     password = data["login_info"]["password"]
-    print(data)
+    pprint(data)
     if not username or not password:
         return (
             jsonify(
@@ -84,7 +85,7 @@ def login(cursor):
 def student_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
-    print(data)
+    pprint(data)
     xh = current_user
 
     # 判断是课程查询请求还是选课请求
@@ -100,7 +101,7 @@ def student_enroll(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        partial_schedule = user_manager.get_partial_open_course(
+        opened_course = user_manager.get_partial_open_course(
             cursor=cursor,
             start_position=0,
             length=40,
@@ -111,8 +112,8 @@ def student_enroll(cursor, current_user):
             jsxm=data["course_info"]["jsxm"],
             sksj=data["course_info"]["sksj"],
         )
-        print(partial_schedule)
-        return partial_schedule
+        pprint(opened_course)
+        return opened_course
 
     elif action == "enroll":
         # 选课请求
@@ -256,7 +257,7 @@ def get_teacher_schedule(cursor, current_user):
 def manage_student_grade(cursor, current_user):
     data = request.get_json()
     jsgh = current_user
-    print(data)
+    pprint(data)
 
     if "action" not in data:
         return jsonify(
@@ -309,7 +310,7 @@ def manage_student_grade(cursor, current_user):
 def identify_operated_user(cursor, current_user):
     data = request.get_json()
     id = data["user_info"]["id"]
-    print(data)
+    pprint(data)
 
     try:
         user_type = user_manager.verify_credentials(cursor, id, None, admin_user=True)
@@ -322,7 +323,7 @@ def identify_operated_user(cursor, current_user):
             )
             enrolled_courses = enrolled_courses.get_data(as_text=True)
             enrolled_courses = json.loads(enrolled_courses)
-            print(enrolled_courses)
+            pprint(enrolled_courses)
             return jsonify(
                 {
                     **user_info,
@@ -362,7 +363,7 @@ def identify_operated_user(cursor, current_user):
 def manage_course_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
-    print(data)
+    pprint(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -374,18 +375,26 @@ def manage_course_enroll(cursor, current_user):
         )
 
     action = data["action"]
+    # role = data["user_info"]["role"]
 
     if action == "get_schedule":
         # 课程查询请求
-        partial_schedule = user_manager.get_partial_course(
+        # if role =="0":
+        course = user_manager.get_course(
             cursor=cursor,
-            start_position=0,
-            length=40,
             kch=data["course_info"]["kch"],
             kcm=data["course_info"]["kcm"],
             xf=data["course_info"]["xf"],
         )
-        return partial_schedule
+        return course
+        # elif role == "1":
+        # course = user_manager.get_student_course(
+        #     cursor=cursor,
+        #     kch=data["course_info"]["kch"],
+        #     kcm=data["course_info"]["kcm"],
+        #     xf=data["course_info"]["xf"],
+        # )
+
     elif action == "enroll":
         # 选课请求
         response = user_manager.enroll_teacher_course(
@@ -481,7 +490,7 @@ def manage_student_course_enroll(cursor, current_user):
             jsxm=data["course_info"]["jsxm"],
             sksj=data["course_info"]["sksj"],
         )
-        print(partial_schedule)
+        pprint(partial_schedule)
         return partial_schedule
 
     elif action == "enroll":
