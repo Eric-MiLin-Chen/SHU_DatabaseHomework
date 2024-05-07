@@ -395,7 +395,7 @@ def manage_course_enroll(cursor, current_user):
             cursor,
             jsgh=data["user_info"]["id"],
             kch=data["course_info"]["kch"],
-            # sksj=data["course_info"]["sksj"],
+            sksj=data["course_info"]["sksj"],
         )
         return response
 

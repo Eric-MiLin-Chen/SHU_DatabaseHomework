@@ -1,6 +1,6 @@
 
 var tested = false;        //测试时设置为true，正式使用时设置为false
-var flaskurl = "http://127.0.0.1:5500";
+var flaskurl = "http://127.0.0.1:5001";
 var currentuser;
 setInterval(() => {
     currentuser = document.getElementsByClassName("nav-no")[0].innerHTML;
@@ -216,7 +216,7 @@ function handleCourseQuery() {
                     theadarray = ["课程号", "课程名", "学分", "教师号", "教师姓名", "上课时间", "操作"];
                 }
                 else if (adminChoose == 1) {
-                    theadarray = ["课程号", "课程名", "学分", "最大人数", "操作"];
+                    theadarray = ["课程号", "课程名", "学分" ,"最大人数", "操作"];
                 }
                 else if (adminChoose == 2) {
                     theadarray = ["课程号", "课程名", "学分", "教师号", "教师姓名", "上课时间", "最大人数", "操作"];
@@ -275,7 +275,7 @@ function handleCurrentCourseQuery() {
                     theadarray = ["课程号", "课程名", "学分", "教师号", "教师姓名", "上课时间", "最大人数", "操作"];
                 }
                 else if (adminChoose == 1) {
-                    theadarray = ["课程号", "课程名", "学分", "选课人数", "最大人数", "操作"];
+                    theadarray = ["课程号", "课程名", "学分", "选课时间", "最大人数", "操作"];
                 }
                 else if (adminChoose == 2) {
                     theadarray = ["课程号", "课程名", "学分", "教师号", "教师姓名", "上课时间", "最大人数", "操作"];
@@ -290,7 +290,7 @@ function handleCurrentCourseQuery() {
 }
 
 //处理课程变动
-function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
+function handleSelectCourse(kch, jshorsksj, action) {
     var data;
     if (adminChoose == 0) {
         data = {
@@ -315,16 +315,36 @@ function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
             }
         }
         else if (adminChoose == 1 && action == "enroll") {
-            data = {
-                course_info: {
-                    kch: kch,
-                    sksj: jshorsksj
-                },
-                user_info: {
-                    id: userid
-                },
-                action: action
-            }
+            openScheduleModal(kch, jshorsksj, function(kch, updatedSksj) {
+                var data = {
+                    action: action,
+                    course_info: {
+                        kch: kch,
+                        sksj: updatedSksj
+                    },
+                    user_info: {
+                        id: userid
+                    }
+                };
+        
+                var dataStr = JSON.stringify(data);
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", `${flaskurl}/manage_course_enroll/`, true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.setRequestHeader("Authorization", Authorization);
+                xhr.send(dataStr);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        var res = JSON.parse(xhr.responseText);
+                        if (res.status == "success") {
+                            alert("操作成功！");
+                        } else {
+                            alert("操作失败：" + res.message);
+                        }
+                    }
+                };
+            });
+            return;
         }
         else if (adminChoose == 1 && action == "drop") {
             data = {
@@ -496,6 +516,41 @@ function appendIdSelect() {
     }
 }
 
+// 打开模态框并处理选择的上课时间
+function openScheduleModal(kch, sksj, onConfirm) {
+    var modal = document.getElementById("scheduleModal");
+    var closeButton = document.getElementsByClassName("close")[0];
+    var confirmButton = document.getElementById("confirmTime");
+
+    modal.style.display = "block";
+
+    // 关闭按钮事件
+    closeButton.onclick = function () {
+        modal.style.display = "none";
+    };
+
+    // 点击窗口外区域关闭模态框
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+
+    // 点击确定按钮时，将组合的上课时间返回
+    confirmButton.onclick = function () {
+        var day = document.getElementById("daySelect").value;
+        var time = document.getElementById("timeSelect").value;
+        var newSchedule = `${day}${time}`;
+
+        // 更新 sksj 并关闭模态框
+        sksj = newSchedule;
+        modal.style.display = "none";
+
+        // 执行回调，传递更新的数据
+        onConfirm(kch, sksj);
+    };
+}
+
 //显示选课查询结果
 function showEnrollInquiry(courseInfo, thead) {
     document.getElementById("courseInquiryResult").innerHTML = "";
@@ -519,7 +574,9 @@ function showEnrollInquiry(courseInfo, thead) {
                 if (adminChoose == 1) { newbutton.innerHTML = "开课"; }
                 else { newbutton.innerHTML = "选课"; }
                 newbutton.onclick = function () {
-                    if (adminChoose == 1) { handleSelectCourse(courseInfo[i].kch, courseInfo[i].sksj, "enroll"); }
+                    if (adminChoose == 1) { 
+                        handleSelectCourse(courseInfo[i].kch, courseInfo[i].sksj, "enroll"); 
+                    }
                     else { handleSelectCourse(courseInfo[i].kch, courseInfo[i].jsh, "enroll"); }
                 }
                 newth.appendChild(newbutton);
@@ -819,6 +876,7 @@ function displayCourseScores(studentInfo) {
 
 document.getElementById("scoreEntry").onclick = function() {
     var scoreRows = document.getElementById("courseScoreEntryResult").getElementsByTagName("tr");
+    var postStatus = 0;
     for (var i = 0; i < scoreRows.length; i++) {
         var cells = scoreRows[i].getElementsByTagName("td");
         var studentNo = cells[0].textContent;
@@ -836,6 +894,7 @@ document.getElementById("scoreEntry").onclick = function() {
         };
         var dataStr = JSON.stringify(data);
         var xhr = new XMLHttpRequest();
+
         xhr.open("POST", `${flaskurl}/teacher_grade/`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.setRequestHeader("Authorization", Authorization);
@@ -844,13 +903,14 @@ document.getElementById("scoreEntry").onclick = function() {
             if (xhr.readyState == 4) {
                 var res = JSON.parse(xhr.responseText);
                 if (res.status == "success") {
-                    alert("成绩录入成功！");
+                    //alert("成绩录入成功！");
                 } else {
-                    alert(res.message);
+                    alert("第",i+1,"行",res.message);
                 }
             }
         };
     }
+    alert("成绩录入成功！");
 
 };
 
