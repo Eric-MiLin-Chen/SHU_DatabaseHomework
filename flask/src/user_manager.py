@@ -73,6 +73,45 @@ class UserManager:
 
     def enroll_student_course(self, cursor, xh, kch, jsh):
         try:
+            # 查询该学生已经选修的课程的上课时间和课程号
+            select_query = """
+                SELECT O.sksj, E.kch
+                FROM E
+                JOIN O ON E.kch = O.kch AND E.jsh = O.jsh
+                WHERE E.xh = %(xh)s
+            """
+            cursor.execute(select_query, {"xh": xh})
+            existing_courses = cursor.fetchall()
+
+            # 查询新课程的上课时间和课程号
+            select_query = """
+                SELECT sksj
+                FROM O
+                WHERE kch = %(kch)s AND jsh = %(jsh)s
+            """
+            cursor.execute(select_query, {"kch": kch, "jsh": jsh})
+            new_sksj = cursor.fetchone()[0]
+
+            # 检查新课程的上课时间是否与已选修课程的上课时间重复
+            for sksj, existing_kch in existing_courses:
+                if sksj == new_sksj:
+                    # 如果时间重叠，拒绝录入课程并返回失败信息
+                    return jsonify(
+                        {
+                            "status": "failed",
+                            "message": "Course schedule conflicts with existing courses.",
+                        }
+                    )
+                if existing_kch == kch:
+                    # 如果课程号重复，拒绝录入课程并返回失败信息
+                    return jsonify(
+                        {
+                            "status": "failed",
+                            "message": "Course already enrolled by the student.",
+                        }
+                    )
+
+            # 插入新课程
             insert_query = """
                 INSERT INTO E (xh, kch, jsh)
                 VALUES (%(xh)s, %(kch)s, %(jsh)s);
@@ -84,8 +123,8 @@ class UserManager:
             }
             cursor.execute(insert_query, parameters)
             return jsonify({"status": "success"})
-        except psycopg2.errors.UniqueViolation:
-            return jsonify({"status": "failed", "message": "UniqueViolation"})
+        except Exception as e:
+            return jsonify({"status": "failed", "message": str(e)})
 
     def drop_student_course(self, cursor, xh, kch, jsh):
         try:
@@ -124,7 +163,8 @@ class UserManager:
             JOIN
                 T ON O.jsgh = T.jsgh
             WHERE
-                E.xh = %(xh)s;
+                E.xh = %(xh)s
+            ORDER BY E.kch, O.jsh;
         """
         parameters = {"xh": xh}
         cursor.execute(query, parameters)
@@ -151,11 +191,9 @@ class UserManager:
             }
         )
 
-    def get_partial_open_course(
+    def get_student_available_course(
         self,
         cursor,
-        start_position,
-        length=20,
         kch="",
         kcm="",
         xf="",
@@ -163,110 +201,82 @@ class UserManager:
         jsxm="",
         sksj="",
     ):
-        # 构建 SQL 查询总数的语句
-        count_query = """
-            SELECT
-                COUNT(*)
-            FROM
-                O
-            JOIN
-                C ON O.kch = C.kch
-            JOIN
-                T ON O.jsgh = T.jsgh
-        """
+        try:
+            # 添加约束条件
+            where_conditions = []
+            parameters = {}
 
-        # 添加约束条件
-        where_conditions = []
-        parameters = {}
+            if kch:
+                where_conditions.append("O.kch = %(kch)s")
+                parameters["kch"] = kch
+            if kcm:
+                where_conditions.append("C.kcm = %(kcm)s")
+                parameters["kcm"] = kcm
+            if xf:
+                where_conditions.append("C.xf = %(xf)s")
+                parameters["xf"] = xf
+            if jsh:
+                where_conditions.append("O.jsh = %(jsh)s")
+                parameters["jsh"] = jsh
+            if jsxm:
+                where_conditions.append("T.jsxm = %(jsxm)s")
+                parameters["jsxm"] = jsxm
+            if sksj:
+                where_conditions.append("O.sksj = %(sksj)s")
+                parameters["sksj"] = sksj
 
-        if kch != "":
-            where_conditions.append("O.kch = %(kch)s")
-            parameters["kch"] = kch
-        if kcm != "":
-            where_conditions.append("C.kcm = %(kcm)s")
-            parameters["kcm"] = kcm
-        if xf != "":
-            where_conditions.append("C.xf = %(xf)s")
-            parameters["xf"] = xf
-        if jsh != "":
-            where_conditions.append("O.jsh = %(jsh)s")
-            parameters["jsh"] = jsh
-        if jsxm != "":
-            where_conditions.append("T.jsxm = %(jsxm)s")
-            parameters["jsxm"] = jsxm
-        if sksj != "":
-            where_conditions.append("O.sksj = %(sksj)s")
-            parameters["sksj"] = sksj
+            # 构建 SQL 查询分页的语句
+            schedule_query = """
+                SELECT
+                    O.kch,
+                    C.kcm,
+                    O.jsh,
+                    T.jsxm,
+                    O.sksj,
+                    C.xf,
+                    C.zdrs
+                FROM
+                    O
+                JOIN
+                    C ON O.kch = C.kch
+                JOIN
+                    T ON O.jsgh = T.jsgh
+            """
+            if where_conditions:
+                schedule_query += " WHERE " + " AND ".join(where_conditions)
 
-        if where_conditions:
-            count_query += " WHERE " + " AND ".join(where_conditions)
+            # 添加排序和分页
+            schedule_query += f" ORDER BY O.kch, O.jsh;"
 
-        # 执行总数查询
-        cursor.execute(count_query, parameters)
-        total_count = cursor.fetchone()[0]
-
-        # 构建 SQL 查询分页的语句
-        schedule_query = """
-            SELECT
-                O.kch,
-                C.kcm,
-                O.jsh,
-                T.jsxm,
-                O.sksj,
-                C.xf,
-                C.zdrs
-            FROM
-                O
-            JOIN
-                C ON O.kch = C.kch
-            JOIN
-                T ON O.jsgh = T.jsgh
-        """
-        if where_conditions:
-            schedule_query += " WHERE " + " AND ".join(where_conditions)
-
-        # 添加排序和分页
-        schedule_query += f"""
-            ORDER BY
-                O.kch
-            OFFSET
-                %(start_position)s
-            LIMIT
-                %(length)s;
-        """
-        parameters["start_position"] = start_position
-        parameters["length"] = length
-
-        # 执行分页查询
-        cursor.execute(schedule_query, parameters)
-        rows = cursor.fetchall()
-        partial_schedule = [
-            {
-                "kch": row[0],
-                "kcm": row[1],
-                "jsh": row[2],
-                "jsxm": row[3],
-                "sksj": row[4],
-                "xf": row[5],
-                "zdrs": row[6],
-            }
-            for row in rows
-        ]
-        pprint(
-            {
-                "total_count": total_count,
-                "course_info": partial_schedule,
-                "status": "success",
-            }
-        )
-        # 将总数和分页结果一起返回
-        return jsonify(
-            {
-                "total_count": total_count,
-                "course_info": partial_schedule,
-                "status": "success",
-            }
-        )
+            # 执行分页查询
+            cursor.execute(schedule_query, parameters)
+            rows = cursor.fetchall()
+            available_course = [
+                {
+                    "kch": row[0],
+                    "kcm": row[1],
+                    "jsh": row[2],
+                    "jsxm": row[3],
+                    "sksj": row[4],
+                    "xf": row[5],
+                    "zdrs": row[6],
+                }
+                for row in rows
+            ]
+            ans = jsonify(
+                {
+                    "total_count": len(available_course),
+                    "course_info": available_course,
+                    "status": "success",
+                }
+            )
+            pprint(ans)
+            # 将总数和分页结果一起返回
+            return ans
+        except Exception as e:
+            # 捕获可能的异常，并返回失败信息
+            error_msg = "Failed to retrieve available courses. Error: {}".format(str(e))
+            return jsonify({"error": error_msg, "status": "failed"})
 
     # 教师方法
 
@@ -283,7 +293,8 @@ class UserManager:
             JOIN
                 C ON O.kch = C.kch
             WHERE
-                O.jsgh = %(jsgh)s;
+                O.jsgh = %(jsgh)s
+            ORDER BY C.kch;
         """
 
         parameters = {"jsgh": jsgh}
@@ -301,16 +312,17 @@ class UserManager:
                     "sksj": sksj,
                     "xf": xf,
                     "zdrs": zdrs,
-                    # "student_info": [],
                 }
 
-        return jsonify(
+        ans = jsonify(
             {
                 "status": "success",
                 "total_courses": len(teacher_schedule),
                 "course_info": list(teacher_schedule.values()),
             }
         )
+        pprint(ans)
+        return ans
 
     def get_student_info(self, cursor, jsgh, kch):
         query = """
@@ -343,28 +355,35 @@ class UserManager:
                     "cj": cj,
                 }
             )
-        pprint(student_info)
-        return jsonify(
+
+        ans = jsonify(
             {
                 "status": "success",
                 "total": len(student_info),
                 "student_info": student_info,
             }
         )
+        pprint(ans)
+        return ans
 
     def manage_student_score(self, cursor, jsgh, kch, xh, cj):
         try:
-            get_jsh_query = "SELECT jsh FROM O WHERE jsgh = %s AND kch = %s"
-            parameters = (jsgh, kch)
+            # 检查成绩格式是否合法
+            if not (cj.isdigit() and 0 <= int(cj) <= 100):
+                return {
+                    "status": "failed",
+                    "message": "Invalid score. Score must be an integer between 0 and 100.",
+                }
+
+            get_jsh_query = "SELECT jsh FROM O WHERE jsgh = %(jsgh)s AND kch = %(kch)s"
+            parameters = {"jsgh": jsgh, "kch": kch}
 
             cursor.execute(get_jsh_query, parameters)
             rows = cursor.fetchall()
 
             jsh = None
             if len(rows) == 0:
-                return jsonify(
-                    {"status": "failed", "message": "No matching record found"}
-                )
+                return {"status": "failed", "message": "No matching record found"}
             else:
                 jsh = rows[0]
 
@@ -373,31 +392,26 @@ class UserManager:
             """
             parameters = {"xh": xh, "kch": kch, "jsh": jsh, "cj": cj}
             cursor.execute(insert_query, parameters)
-            return jsonify({"status": "success"})
+            return {"status": "success"}
         except psycopg2.errors.UniqueViolation:
-            return jsonify({"status": "failed", "message": "UniqueViolation"})
+            return {"status": "failed", "message": "UniqueViolation"}
 
     # 管理员方法
 
-    def get_course(self, cursor, kch, kcm, xf, role=1):
+    def get_teacher_available_course(self, cursor, kch="", kcm="", xf=""):
         # 添加约束条件
         schedule_query = """
-                SELECT DISTINCT
-                    C.kch,
-                    C.kcm,
-                    O.jsh,
-                    T.jsxm,
-                    O.sksj,
-                    C.xf,
-                    C.zdrs
-                FROM
-                    C
-                JOIN
-                    O ON C.kch = O.kch
-                JOIN
-                    T ON O.jsgh = T.jsgh
-                ORDER BY
-                    C.kch
+            SELECT DISTINCT
+                C.kch,
+                C.kcm,
+                C.xf,
+                C.zdrs
+            FROM
+                C
+            JOIN
+                O ON C.kch = O.kch
+            JOIN
+                T ON O.jsgh = T.jsgh
         """
         where_conditions = []
         parameters = {}
@@ -412,113 +426,75 @@ class UserManager:
             where_conditions.append("C.xf = %(xf)s")
             parameters["xf"] = xf
 
-        # 构建 SQL 查询的语句
-        # if role == 0:
-        #     schedule_query = """
-        #         SELECT
-        #             C.kch,
-        #             C.kcm,
-        #             O.jsh,
-        #             T.jsxm,
-        #             O.sksj,
-        #             C.xf,
-        #             C.zdrs
-        #         FROM
-        #             C
-        #         JOIN
-        #             O ON C.kch = O.kch
-        #         JOIN
-        #             T ON O.jsgh = T.jsgh
-        #         ORDER BY
-        #             C.kch
-        # """
-        # elif role == 1:
-        #     schedule_query = """
-        #         SELECT DISTINCT
-        #             C.kch,
-        #             C.kcm,
-        #             O.jsh,
-        #             T.jsxm,
-        #             O.sksj,
-        #             C.xf,
-        #             C.zdrs
-        #         FROM
-        #             C
-        #         JOIN
-        #             O ON C.kch = O.kch
-        #         JOIN
-        #             T ON O.jsgh = T.jsgh
-        #         ORDER BY
-        #             C.kch
-        # """
-        # else:
-        #     return
-
         if where_conditions:
             schedule_query += " WHERE " + " AND ".join(where_conditions)
 
+        schedule_query += f" ORDER BY C.kch"
+
         cursor.execute(schedule_query, parameters)
         rows = cursor.fetchall()
-        partial_schedule = [
+        teacher_available_course = [
             {
                 "kch": row[0],
                 "kcm": row[1],
-                "xf": row[5],
-                "zdrs": row[6],
+                "xf": row[2],
+                "zdrs": row[3],
             }
             for row in rows
         ]
 
         # 将总数和分页结果一起返回
-        result = {
-            "total_count": len(partial_schedule),
-            "course_info": partial_schedule,
+        ans = {
+            "total_count": len(teacher_available_course),
+            "course_info": teacher_available_course,
             "status": "success",
         }
 
-        return result
+        pprint(ans)
 
-    def enroll_teacher_course(self, cursor, jsgh, kch, sksj=None):
+        return ans
+
+    def enroll_teacher_course(self, cursor, jsgh, kch, sksj):
         try:
-            # 判断同教师在相同sksj中是否已有课程
-            day = ["一", "二", "三", "四", "五"]
+            # 检查老师在O表中所开的课程上课时间是否有重复
+            check_existing_schedule_query = (
+                "SELECT 1 FROM O WHERE jsgh = %(jsgh)s AND sksj = %(sksj)s"
+            )
+            cursor.execute(check_existing_schedule_query, {"jsgh": jsgh, "sksj": sksj})
+            existing_schedule = cursor.fetchone()
+            if existing_schedule:
+                return {
+                    "status": "failed",
+                    "message": "Duplicate class schedule for the teacher.",
+                }
 
-            if sksj == None:
-                time = random.randint(1, 6) * 2 - 1
-                sksj = f"{day[random.randint(0, 4)]}{time}-{time+1}"
-                pprint(sksj)
+            # 查询同课程号的教师号，并生成新增课程的教师号
+            get_max_jsh_query = (
+                "SELECT MAX(CAST(jsh AS INTEGER)) FROM O WHERE kch = %(kch)s"
+            )
+            cursor.execute(get_max_jsh_query, {"kch": kch})
+            max_jsh = cursor.fetchone()[0]
+            if max_jsh is None:
+                new_jsh = "1"
+            else:
+                new_jsh = str(int(max_jsh) + 1)
 
-            check_course_query = "SELECT COUNT(*) FROM O WHERE jsgh = %s AND sksj = %s"
-            cursor.execute(check_course_query, (jsgh, sksj))
-            existing_courses_count = cursor.fetchone()[0]
-
-            if existing_courses_count > 0:
-                return {"status": "error", "message": "Course time conflict"}
-
-            # 查询同课程号下所有开课的jsgh并保存入列表
-            all_jsgh_query = "SELECT jsgh FROM O WHERE kch = %s"
-            cursor.execute(all_jsgh_query, (kch,))
-            all_jsgh_list = [row[0] for row in cursor.fetchall()]
-
-            # 分配教师号，从最小值开始递增，直到找到第一个不冲突的教师号
-            new_jsgh = 1001
-            while new_jsgh in all_jsgh_list:
-                new_jsgh += 1
-
-            # 插入记录到表O
-            insert_query = "INSERT INTO O (jsgh, kch, jsh, sksj) VALUES (%(jsgh)s, %(kch)s, %(jsh)s, %(sksj)s)"
+            # 插入新课程
+            insert_course_query = """
+                INSERT INTO O (jsgh, kch, jsh, sksj)
+                VALUES (%(jsgh)s, %(kch)s, %(jsh)s, %(sksj)s);
+            """
             parameters = {
                 "jsgh": jsgh,
                 "kch": kch,
-                "jsh": new_jsgh,
+                "jsh": new_jsh,
                 "sksj": sksj,
             }
-            cursor.execute(insert_query, parameters)
+            cursor.execute(insert_course_query, parameters)
 
             return {"status": "success"}
-
-        except psycopg2.errors.UniqueViolation:
-            return jsonify({"status": "failed", "message": "UniqueViolation"})
+        except Exception as e:
+            return {"status": "failed", "message": str(e)}
 
     def drop_teacher_course(self, cursor, jsgh, kch, sksj):
         try:

@@ -85,8 +85,8 @@ def login(cursor):
 def student_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
-    pprint(data)
     xh = current_user
+    pprint(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -101,10 +101,8 @@ def student_enroll(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        opened_course = user_manager.get_partial_open_course(
+        opened_course = user_manager.get_student_available_course(
             cursor=cursor,
-            start_position=0,
-            length=40,
             kch=data["course_info"]["kch"],
             kcm=data["course_info"]["kcm"],
             xf=data["course_info"]["xf"],
@@ -144,6 +142,7 @@ def student_enroll(cursor, current_user):
 def student_drop(cursor, current_user):
     data = request.get_json()
     xh = current_user  # 当前登录的学生学号
+    pprint(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -190,6 +189,8 @@ def student_drop(cursor, current_user):
 def get_student_schedule(cursor, current_user):
     data = request.get_json()
     xh = current_user
+    pprint(data)
+
     if "action" not in data:
         return jsonify(
             {
@@ -225,6 +226,8 @@ def get_student_schedule(cursor, current_user):
 def get_teacher_schedule(cursor, current_user):
     data = request.get_json()
     jsgh = current_user
+    pprint(data)
+
     if "action" not in data:
         return jsonify(
             {
@@ -375,25 +378,16 @@ def manage_course_enroll(cursor, current_user):
         )
 
     action = data["action"]
-    # role = data["user_info"]["role"]
 
     if action == "get_schedule":
         # 课程查询请求
-        # if role =="0":
-        course = user_manager.get_course(
+        course = user_manager.get_teacher_available_course(
             cursor=cursor,
             kch=data["course_info"]["kch"],
             kcm=data["course_info"]["kcm"],
             xf=data["course_info"]["xf"],
         )
         return course
-        # elif role == "1":
-        # course = user_manager.get_student_course(
-        #     cursor=cursor,
-        #     kch=data["course_info"]["kch"],
-        #     kcm=data["course_info"]["kcm"],
-        #     xf=data["course_info"]["xf"],
-        # )
 
     elif action == "enroll":
         # 选课请求
@@ -422,6 +416,7 @@ def manage_course_enroll(cursor, current_user):
 @db_manager.connect_db
 def manage_course_drop(cursor, current_user):
     data = request.get_json()
+    pprint(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -470,6 +465,7 @@ def manage_course_drop(cursor, current_user):
 def manage_student_course_enroll(cursor, current_user):
     # 获取前端发送的 JSON 表单
     data = request.get_json()
+    pprint(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
@@ -479,10 +475,8 @@ def manage_student_course_enroll(cursor, current_user):
 
     if action == "get_schedule":
         # 课程查询请求
-        partial_schedule = user_manager.get_partial_open_course(
+        partial_schedule = user_manager.get_student_available_course(
             cursor=cursor,
-            start_position=0,
-            length=40,
             kch=data["course_info"]["kch"],
             kcm=data["course_info"]["kcm"],
             xf=data["course_info"]["xf"],
@@ -515,6 +509,7 @@ def manage_student_course_enroll(cursor, current_user):
 @db_manager.connect_db
 def manage_student_course_drop(cursor, current_user):
     data = request.get_json()
+    pprint(data)
 
     # 判断是课程查询请求还是选课请求
     if "action" not in data:
