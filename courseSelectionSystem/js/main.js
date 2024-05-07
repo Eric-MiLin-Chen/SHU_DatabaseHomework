@@ -1,11 +1,12 @@
 
 var tested = false;        //测试时设置为true，正式使用时设置为false
-var flaskurl = "http://127.0.0.1:5001";
+var flaskurl = "http://127.0.0.1:5500";
 var currentuser;
 setInterval(() => {
     currentuser = document.getElementsByClassName("nav-no")[0].innerHTML;
 }, 50);
 var Authorization;
+var selectedCourseNo = null;
 
 //处理登录
 document.getElementById("login-submit").onclick = function () {
@@ -76,7 +77,7 @@ function turnManager() {
 
 //处理学生操作
 function handleChooseArticleItemShow(i) {
-    for (let j = 0; j < 3; j++) {
+    for (let j = 0; j < 4; j++) {
         document.getElementsByClassName("article-item")[j].style.display = "none";
     }
     document.getElementsByClassName("article-item")[i].style.display = "block";
@@ -110,6 +111,10 @@ document.getElementById("student-scheduleInquiry").onclick = function () {
 document.getElementById("teacher-scheduleInquiry").onclick = function () {
     handleChooseArticleItemShow(2);
     handleScheduleQuery(1);
+}
+document.getElementById("teacher-scoreEntry").onclick = function () {
+    handleChooseArticleItemShow(3);
+    fetchTeacherCourses();
 }
 var adminChoose = 0;    //0默认，2查询id为学生，1查询id为老师
 document.getElementById("admin-enroll").onclick = function () {
@@ -146,9 +151,9 @@ function menucontentHandler(user, deltaY) {
         menuMasked = false;
     }
 }
-document.getElementById("menu-student-title").onclick = function () { menucontentHandler(0, 10.5) };
-document.getElementById("menu-teacher-title").onclick = function () { menucontentHandler(1, 3.5) };
-document.getElementById("menu-admin-title").onclick = function () { menucontentHandler(2, 10.5) };
+document.getElementById("menu-student-title").onclick = function () { menucontentHandler(0, 10.7) };
+document.getElementById("menu-teacher-title").onclick = function () { menucontentHandler(1, 7.5) };
+document.getElementById("menu-admin-title").onclick = function () { menucontentHandler(2, 10.7) };
 
 
 //处理选课课程查询
@@ -178,7 +183,7 @@ function handleCourseQuery() {
             course_info: {
                 kch: courseNo,
                 kcm: courseName,
-                xf: courseCredit
+                xf: courseCredit,
             },
             action: "get_schedule"
         };
@@ -373,7 +378,19 @@ function handleSelectCourse(kch, jshorsksj, action, sksj = null) {
                     alert("退课成功！");
                 }
             } else {
-                alert(res.message);
+               // alert(res.message);
+                if (action == "enroll") {
+                    if (adminChoose == 1) {
+                        alert("开课失败！")
+                    }
+                    else {
+                        alert("选课失败！");
+                        handleCurrentCourseQuery();
+                    }
+                }
+                if (action == "drop") {
+                    alert("退课失败！");
+                }
             }
         }
     }
@@ -391,7 +408,7 @@ function handleScheduleQuery(quiryType) {
     var xhr = new XMLHttpRequest();
     if (tested) { xhr.open("get", "test.json"); }
     else {
-        if (quiryType == 1) { xhr.open("POST", `${flaskurl}/get_teacher_schedule/`, true); }
+        if (quiryType == 1 || quiryType == 3) { xhr.open("POST", `${flaskurl}/get_teacher_schedule/`, true); }
         else if (quiryType == 2) { xhr.open("POST", `${flaskurl}/get_student_schedule/`, true); }
     }
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -409,6 +426,9 @@ function handleScheduleQuery(quiryType) {
                 }
                 else if (quiryType == 1) {
                     theadarray = ["序号", "课程号", "课程名", "上课时间", "最大人数"];
+                }
+                else if (quiryType == 3) {
+                    theadarray = ["课程号","课程名"]
                 }
                 showScheduleInquiry(quiryType, courseInfo, theadarray);
             }
@@ -597,7 +617,242 @@ function showScheduleInquiry(quiryType, courseInfo, thead) {
     }
 }
 
+// 获取课程学生成绩
+function fetchCourseScores(courseNo) {
+    var data = {
+        course_info: {
+            kch: courseNo
+        },
+        action: "get_scores",
+        Authorization:Authorization
+    };
+    var dataStr = JSON.stringify(data);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", `${flaskurl}/get_course_scores/`, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
+    xhr.send(dataStr);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            var res = JSON.parse(xhr.responseText);
+            if (res.status == "success") {
+                showCourseScores(res.scores);
+            } else {
+                alert(res.message);
+            }
+        }
+    };
+}
 
+// 显示学生成绩
+function showCourseScores(scores) {
+    var scoresTable = document.getElementById("courseScoreEntryResult");
+    scoresTable.innerHTML = "";
+    scores.forEach(function(score) {
+        var newRow = document.createElement("tr");
+        var studentNoCell = document.createElement("td");
+        studentNoCell.textContent = score.student_no;
+        var studentNameCell = document.createElement("td");
+        studentNameCell.textContent = score.student_name;
+        var scoreCell = document.createElement("td");
+        scoreCell.contentEditable = "true";
+        scoreCell.textContent = score.grade;
+        scoreCell.dataset.studentNo = score.student_no;
+
+        newRow.appendChild(studentNoCell);
+        newRow.appendChild(studentNameCell);
+        newRow.appendChild(scoreCell);
+        scoresTable.appendChild(newRow);
+    });
+}
+
+// 提交学生成绩
+document.getElementById("scoreEntry").onclick = function() {
+    var scores = [];
+    var scoreRows = document.getElementById("courseScoreEntryResult").getElementsByTagName("tr");
+    for (var i = 0; i < scoreRows.length; i++) {
+        var cells = scoreRows[i].getElementsByTagName("td");
+        var studentNo = cells[0].textContent;
+        var grade = cells[2].textContent;
+        scores.push({ student_no: studentNo, grade: grade });
+    }
+
+    var data = {
+        scores: scores,
+        action: "update_scores"
+    };
+    var dataStr = JSON.stringify(data);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", `${flaskurl}/update_course_scores/`, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
+    xhr.send(dataStr);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            var res = JSON.parse(xhr.responseText);
+            if (res.status == "success") {
+                alert("成绩录入成功！");
+            } else {
+                alert(res.message);
+            }
+        }
+    };
+};
+
+// 给课程列表中的每一行添加事件
+document.getElementById("courseScoreEntrySelect").addEventListener('click', function(event) {
+    var target = event.target;
+    if (target.nodeName === 'BUTTON') {
+        var courseNo = target.dataset.courseNo;
+        fetchCourseScores(courseNo);
+    }
+});
+
+// 查询并显示教师当前课程，用于成绩录入选择
+function fetchTeacherCourses() {
+    var data = {
+        action: "get_schedule"
+    };
+    var dataStr = JSON.stringify(data);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", `${flaskurl}/get_teacher_schedule/`, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
+    xhr.send(dataStr);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            var res = JSON.parse(xhr.responseText);
+            if (res.status == "success") {
+                var courseInfo = res.course_info;
+                displayTeacherCourses(courseInfo);
+            } else {
+                alert(res.message);
+            }
+        }
+    };
+}
+
+// 将教师课程显示在“成绩录入”选择框中
+function displayTeacherCourses(courseInfo) {
+    var courseSelectTable = document.getElementById("courseScoreEntrySelect");
+    courseSelectTable.innerHTML = "";
+
+    courseInfo.forEach(function(course) {
+        var newRow = document.createElement("tr");
+        var courseNoCell = document.createElement("td");
+        courseNoCell.textContent = course.kch;
+        var courseNameCell = document.createElement("td");
+        courseNameCell.textContent = course.kcm;
+        var courseTimeCell = document.createElement("td");
+        courseTimeCell.textContent = course.sksj;
+        var actionCell = document.createElement("td");
+
+        var selectButton = document.createElement("button");
+        selectButton.textContent = "选择";
+        selectButton.dataset.courseNo = course.kch;
+        selectButton.onclick = function () {
+            fetchCourseScores(course.kch);
+            selectedCourseNo = course.kch;
+        };
+
+        actionCell.appendChild(selectButton);
+        newRow.appendChild(courseNoCell);
+        newRow.appendChild(courseNameCell);
+        newRow.appendChild(courseTimeCell);
+        newRow.appendChild(actionCell);
+        courseSelectTable.appendChild(newRow);
+    });
+}
+
+// 获取指定课程的学生成绩
+function fetchCourseScores(courseNo) {
+    var data = {
+        action:"get_info",
+        course_info: {
+            kch: courseNo
+        }
+    };
+    var dataStr = JSON.stringify(data);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", `${flaskurl}/teacher_grade/`, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
+    xhr.send(dataStr);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            var res = JSON.parse(xhr.responseText);
+            if (res.status == "success") {
+                displayCourseScores(res.student_info);
+            } else {
+                alert(res.message);
+            }
+        }
+    };
+}
+
+// 将学生成绩信息显示在成绩录入框中
+function displayCourseScores(studentInfo) {
+    var scoresTable = document.getElementById("courseScoreEntryResult");
+    scoresTable.innerHTML = "";
+
+    studentInfo.forEach(function(student) {
+        var newRow = document.createElement("tr");
+
+        var studentNoCell = document.createElement("td");
+        studentNoCell.textContent = student.xh;
+
+        var studentNameCell = document.createElement("td");
+        studentNameCell.textContent = student.xm;
+
+        var gradeCell = document.createElement("td");
+        gradeCell.contentEditable = "true";
+        gradeCell.textContent = student.cj === null ? "0" : student.cj;
+        gradeCell.dataset.studentNo = student.xh;
+
+        newRow.appendChild(studentNoCell);
+        newRow.appendChild(studentNameCell);
+        newRow.appendChild(gradeCell);
+
+        scoresTable.appendChild(newRow);
+    });
+}
+
+document.getElementById("scoreEntry").onclick = function() {
+    var scoreRows = document.getElementById("courseScoreEntryResult").getElementsByTagName("tr");
+    for (var i = 0; i < scoreRows.length; i++) {
+        var cells = scoreRows[i].getElementsByTagName("td");
+        var studentNo = cells[0].textContent;
+        var grade = cells[2].textContent;
+        var courseNo = selectedCourseNo;
+        var data = {
+            action: "enroll",
+            course_info: {
+                kch: courseNo
+            },
+            student_info: {
+                xh: studentNo,
+                cj: grade
+            }
+        };
+        var dataStr = JSON.stringify(data);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", `${flaskurl}/teacher_grade/`, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Authorization", Authorization);
+        xhr.send(dataStr);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                var res = JSON.parse(xhr.responseText);
+                if (res.status == "success") {
+                    alert("成绩录入成功！");
+                } else {
+                    alert(res.message);
+                }
+            }
+        };
+    }
+
+};
 
 function lshNEEDit() {
     var data = {

@@ -76,6 +76,7 @@
                     </div>
                     <ul class="menu-select">
                         <li id="teacher-scheduleInquiry"><a>课表查询</a></li>
+                        <li id="teacher-scoreEntry"><a>成绩录入</a></li>
                     </ul>
                     <div class="menu-mask"></div>
                 </div>
@@ -314,6 +315,48 @@
 
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+            <div class="article-item">
+                <div class="box-scoreEntry">
+                    <div class="box-scoreEntry-title">
+                        <p>成绩录入</p>
+                    </div>
+                    <div class="box-scoreEntrySelect-table">
+                        <table>
+                            <thead>
+                                <tr id="scoreEntrySelectTableTheadTr">
+                                    <th>课程号</th>
+                                    <th>课程名</th>
+                                    <th>上课时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courseScoreEntrySelect">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="box-scoreEntryResult">
+                    <div class="box-scoreEntryResult-title">
+                        <p>学生成绩</p>
+                    </div>
+                    <div class="box-scoreEntryResult-table">
+                        <table>
+                            <thead>
+                                <tr id="scoreEntryTableTheadTr">
+                                    <th>学号</th>
+                                    <th>姓名</th>
+                                    <th contenteditable="true">成绩</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courseScoreEntryResult">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box-scoreEntry-button">
+                        <div><button id="scoreEntry">录入</button></div>
                     </div>
                 </div>
             </div>
