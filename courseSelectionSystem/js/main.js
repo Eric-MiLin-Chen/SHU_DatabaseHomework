@@ -289,6 +289,36 @@ function handleCurrentCourseQuery() {
     }
 }
 
+//单独处理管理员为老师关课
+function handleCloseCourse(kch, sksj) {
+    var data = {
+        course_info: {
+            kch: kch,
+            sksj: sksj
+        },
+        user_info: {
+            id: userid
+        },
+        action: "drop"
+    }
+    var dataStr = JSON.stringify(data);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", `${flaskurl}/manage_course_drop/`, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", Authorization);
+    xhr.send(dataStr);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            var res = JSON.parse(xhr.responseText);
+            if (res.status == "success") {
+                alert("退课成功！");
+            } else {
+                alert("退课失败！");
+            }
+        }
+    }
+}
+
 //处理课程变动
 function handleSelectCourse(kch, jshorsksj, action) {
     var data;
@@ -350,8 +380,8 @@ function handleSelectCourse(kch, jshorsksj, action) {
             data = {
                 course_info: {
                     kch: kch,
-                    jsh: jshorsksj,
-                    sksj: sksj
+                    jsh: jshorsksj
+                    //sksj: sksj
                 },
                 user_info: {
                     id: userid
@@ -614,7 +644,7 @@ function showDropInquiry(courseInfo, thead) {
                 if (adminChoose == 1) { newbutton.innerHTML = "关课"; }
                 else { newbutton.innerHTML = "退课"; }
                 newbutton.onclick = function () {
-                    if (adminChoose == 1) { handleSelectCourse(courseInfo[i].kch, courseInfo[i].jsh, "drop", courseInfo[i].sksj); }
+                    if (adminChoose == 1) { handleCloseCourse(courseInfo[i].kch, courseInfo[i].sksj); }
                     else { handleSelectCourse(courseInfo[i].kch, courseInfo[i].jsh, "drop"); }
                 }
                 newth.appendChild(newbutton);
