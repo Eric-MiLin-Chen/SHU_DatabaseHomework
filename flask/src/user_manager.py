@@ -498,8 +498,10 @@ class UserManager:
 
     def drop_teacher_course(self, cursor, jsgh, kch, sksj):
         try:
-            delete_query = """
-                DELETE FROM O
+            # 查询被删除课程的教师号
+            get_deleted_jsh_query = """
+                SELECT jsh
+                FROM O
                 WHERE jsgh = %(jsgh)s AND kch = %(kch)s AND sksj = %(sksj)s;
             """
             parameters = {
@@ -507,9 +509,48 @@ class UserManager:
                 "kch": kch,
                 "sksj": sksj,
             }
+            cursor.execute(get_deleted_jsh_query, parameters)
+            deleted_jsh = cursor.fetchone()
+
+            # 如果没有找到被删除课程的教师号，则返回失败状态与错误消息
+            if not deleted_jsh:
+                return jsonify(
+                    {
+                        "status": "failed",
+                        "message": "No matching record found for deletion",
+                    }
+                )
+
+            deleted_jsh = deleted_jsh[0]  # 提取被删除课程的教师号
+
+            # 删除指定课程
+            delete_query = """
+                DELETE FROM O
+                WHERE jsgh = %(jsgh)s AND kch = %(kch)s AND sksj = %(sksj)s;
+            """
             cursor.execute(delete_query, parameters)
+
+            # 更新大于被删除课程的教师号
+            update_query = """
+                UPDATE O
+                SET jsh = jsh - 1
+                WHERE kch = %(kch)s AND jsh > %(deleted_jsh)s;
+            """
+            parameters = {
+                "kch": kch,
+                "deleted_jsh": deleted_jsh,
+            }
+            cursor.execute(update_query, parameters)
+
+            # 如果没有匹配的记录被删除，则返回失败状态与错误消息
             if cursor.rowcount == 0:
-                raise Exception("No matching record found for deletion")
+                return jsonify(
+                    {
+                        "status": "failed",
+                        "message": "No matching record found for deletion",
+                    }
+                )
+
             return jsonify({"status": "success"})
         except Exception as e:
             return jsonify({"status": "failed", "message": str(e)})
