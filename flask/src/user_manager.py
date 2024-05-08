@@ -530,6 +530,15 @@ class UserManager:
             """
             cursor.execute(delete_query, parameters)
 
+            # 如果没有匹配的记录被删除，则返回失败状态与错误消息
+            if cursor.rowcount == 0:
+                return jsonify(
+                    {
+                        "status": "failed",
+                        "message": "No matching record found for deletion",
+                    }
+                )
+
             # 更新大于被删除课程的教师号
             update_query = """
                 UPDATE O
@@ -541,15 +550,6 @@ class UserManager:
                 "deleted_jsh": deleted_jsh,
             }
             cursor.execute(update_query, parameters)
-
-            # 如果没有匹配的记录被删除，则返回失败状态与错误消息
-            if cursor.rowcount == 0:
-                return jsonify(
-                    {
-                        "status": "failed",
-                        "message": "No matching record found for deletion",
-                    }
-                )
 
             return jsonify({"status": "success"})
         except Exception as e:
