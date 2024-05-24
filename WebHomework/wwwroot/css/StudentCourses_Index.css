@@ -1,0 +1,153 @@
+﻿.box-schedule {
+    width: 98%;
+    height: 40vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: #000 2px solid;
+    margin: 1%;
+    overflow-y: auto;
+}
+
+.box-schedule-title {
+    width: 100%;
+    height: 11%;
+    text-align: center;
+    background-color: #b3b3b3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 1.7vw;
+}
+
+.box-schedule-table {
+    width: 100%;
+    flex-grow: 1;
+    background-color: #fbf9f9;
+}
+
+    .box-schedule-table table {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .box-schedule-table table thead {
+            width: 100%;
+            height: auto;
+        }
+
+        .box-schedule-table table tbody {
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+            .box-schedule-table table tbody::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            .box-schedule-table table tbody::-webkit-scrollbar-thumb {
+                background-color: #888;
+                border-radius: 10px;
+            }
+
+            .box-schedule-table table tbody::-webkit-scrollbar-track {
+                background-color: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .box-schedule-table table tbody tr:nth-child(odd) {
+                background-color: #ddd;
+            }
+
+        .box-schedule-table table tr {
+            width: 100%;
+            height: 4vh;
+            display: flex;
+            background-color: #f0efef;
+            flex-direction: row;
+            justify-self: center;
+            align-items: center;
+        }
+
+        .box-schedule-table table thead tr th,
+        .box-schedule-table table tbody tr td {
+            width: 20%;
+            text-align: center;
+        }
+
+.box-scheduletable {
+    width: 98%;
+    height: 45vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: #000 2px solid;
+    margin: 1%;
+}
+
+.box-scheduletable-title {
+    width: 100%;
+    height: 11%;
+    text-align: center;
+    background-color: #b3b3b3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 1.7vw;
+}
+
+.box-scheduletable-table {
+    width: 100%;
+    height: 89%;
+    background-color: #fbf9f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+    .box-scheduletable-table table {
+        width: 80%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .box-scheduletable-table table thead {
+            width: 100%;
+            height: auto;
+        }
+
+        .box-scheduletable-table table tbody {
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        .box-scheduletable-table table tr {
+            width: 100%;
+            display: flex;
+            background-color: #f0efef;
+            flex-direction: row;
+            justify-self: center;
+            align-items: center;
+        }
+
+        .box-scheduletable-table table thead tr {
+            height: auto;
+        }
+
+        .box-scheduletable-table table tbody tr {
+            height: auto;
+        }
+
+            .box-scheduletable-table table tbody tr:nth-child(odd) {
+                background-color: #ddd;
+            }
+
+            .box-scheduletable-table table thead tr th,
+            .box-scheduletable-table table tbody tr td {
+                width: 16%;
+                text-align: center;
+            }

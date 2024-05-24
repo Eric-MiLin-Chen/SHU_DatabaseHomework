@@ -1,0 +1,91 @@
+﻿@model WebHomework.Models.StudentCourseViewModel
+@{
+    ViewData["Title"] = "退课";
+    Layout = "_StudentLayout";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/StudentCourses_Delete.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="article-item">
+        <div class="box-schedule">
+            <div class="box-schedule-title">
+                <p>当前选课</p>
+            </div>
+            <div class="box-schedule-table">
+                <table class="table">
+                    <thead>
+                        <tr id="scheduleTableTheadTr">
+                            <th>课程号</th>
+                            <th>课程名</th>
+                            <th>学分</th>
+                            <th>教师号</th>
+                            <th>教师姓名</th>
+                            <th>上课时间</th>
+                            <th>最大人数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="currentSelectedResult2">
+                        @for (int i = 0; i < Model.StudentCourse.Count; i++)
+                        {
+                            var sc = Model.StudentCourse[i];
+                            var course = Model.Course.FirstOrDefault(c => c.CourseNO == sc.CourseNO);
+                            var teacherCourse = Model.TeacherCourse.FirstOrDefault(tc => tc.CourseNO == sc.CourseNO && tc.TeacherNum == sc.TeacherNum);
+                            var teacher = Model.Teacher.FirstOrDefault(t => t.TeacherNO == teacherCourse.TeacherNO);
+                            <tr>
+                                <td>@sc.CourseNO</td>
+                                <td>@course?.CourseName</td>
+                                <td>@course?.Credits</td>
+                                <td>@sc.TeacherNum</td>
+                                <td>@teacher?.TeacherName</td>
+                                <td>@teacherCourse?.CourseTime</td>
+                                <td>@course?.MaxStudentNum</td>
+                                <td>
+                                    <button class="btn btn-primary delete-course" data-course-no="@sc.CourseNO">退课</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // 为动态生成的退课按钮添加点击事件
+            $(document).on('click', '.delete-course', function (event) {
+                event.preventDefault(); // 阻止默认的按钮行为
+                var courseNo = $(this).data('course-no');
+
+                $.ajax({
+                    url: '@Url.Action("DeleteCourse", "StudentCourses")',
+                    type: 'POST',
+                    data: {
+                        courseNo: courseNo
+                    },
+                    success: function (data) {
+                        alert(data.message);
+                        if (data.success) {
+                            location.reload(); // 刷新页面以显示最新的课程列表
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Delete course error:', error);
+                        alert('退课失败，请稍后再试');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+﻿@model WebHomework.Models.Password
+
+@{
+    ViewData["Title"] = "登录";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Password_Login.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="login-frame">
+        <div class="login-container">
+            <div class="login-title">登录</div>
+            <div class="login-subtitle">您正在登录该系统</div>
+
+            <form asp-action="Login" asp-controller="Passwords" method="post">
+                @if (ViewBag.ErrorMessage != null)
+                {
+                    <div class="alert alert-danger" id="errorMessage">@ViewBag.ErrorMessage</div>
+                }
+                <div class="form-group">
+                    <label asp-for="UserNO">用户名</label>
+                    <input asp-for="UserNO" class="form-control" />
+                    <span asp-validation-for="UserNO" class="text-danger"></span>
+                </div>
+                <br />
+                <div class="form-group">
+                    <label asp-for="Passwords">密码</label>
+                    <input asp-for="Passwords" class="form-control" type="password" />
+                    <span asp-validation-for="Passwords" class="text-danger"></span>
+                </div>
+                <br />
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var errorMessage = document.getElementById("errorMessage");
+        var loginContainer = document.querySelector(".login-container");
+
+        if (errorMessage) {
+            var heightAdjustment = errorMessage.offsetHeight + 20; 
+            loginContainer.style.height = loginContainer.offsetHeight + heightAdjustment + "px";
+        }
+    });
+</script>

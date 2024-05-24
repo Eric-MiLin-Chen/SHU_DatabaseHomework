@@ -1,0 +1,198 @@
+﻿@model WebHomework.Models.StudentCourseViewModel
+@{
+    ViewData["Title"] = "课表查询";
+    Layout = "_AdministratorLayout";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/StudentCourses_Index.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="article-item">
+        <div class="box-schedule">
+            <div class="box-schedule-title">
+                <p>当前选课</p>
+            </div>
+            <div class="box-schedule-table">
+                <table>
+                    <thead>
+                        <tr id="scheduleTableTheadTr">
+                            <th>序号</th>
+                            <th>课程号</th>
+                            <th>课程名</th>
+                            <th>学分</th>
+                            <th>教师号</th>
+                            <th>教师姓名</th>
+                            <th>上课时间</th>
+                            <th>最大人数</th>
+                        </tr>
+                    </thead>
+                    <tbody id="currentSelectedResult2">
+                        @if (ViewBag.UserIdentity == "2") // 学生
+                        {
+                            @for (int i = 0; i < Model.StudentCourse.Count; i++)
+                            {
+                                var sc = Model.StudentCourse[i];
+                                var course = Model.Course.FirstOrDefault(c => c.CourseNO == sc.CourseNO);
+                                var teacherCourse = Model.TeacherCourse.FirstOrDefault(tc => tc.CourseNO == sc.CourseNO && tc.TeacherNum == sc.TeacherNum);
+                                var teacher = teacherCourse != null ? Model.Teacher.FirstOrDefault(t => t.TeacherNO == teacherCourse.TeacherNO) : null;
+                                <tr>
+                                    <td>@((char)('A' + i))</td>
+                                    <td>@sc.CourseNO</td>
+                                    <td>@course?.CourseName</td>
+                                    <td>@course?.Credits</td>
+                                    <td>@sc.TeacherNum</td>
+                                    <td>@teacher?.TeacherName</td>
+                                    <td>@teacherCourse?.CourseTime</td>
+                                    <td>@course?.MaxStudentNum</td>
+                                </tr>
+                            }
+                        }
+                        else if (ViewBag.UserIdentity == "1") // 教师
+                        {
+                            var index = 0;
+                            @foreach (var teacherCourse in Model.TeacherCourse)
+                            {
+                                var course = Model.Course.FirstOrDefault(c => c.CourseNO == teacherCourse.CourseNO);
+                                var studentsForCourse = Model.StudentCourse.Where(sc => sc.CourseNO == teacherCourse.CourseNO && sc.TeacherNum == teacherCourse.TeacherNum).ToList();
+                                var teacher = Model.Teacher.FirstOrDefault(t => t.TeacherNO == teacherCourse.TeacherNO);
+                                <tr>
+                                    <td>@((char)('A' + index))</td>
+                                    <td>@teacherCourse.CourseNO</td>
+                                    <td>@course?.CourseName</td>
+                                    <td>@course?.Credits</td>
+                                    <td>@teacherCourse.TeacherNum</td>
+                                    <td>@teacher?.TeacherName</td>
+                                    <td>@teacherCourse.CourseTime</td>
+                                    <td>@course?.MaxStudentNum</td>
+                                </tr>
+                                index++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="box-scheduletable">
+            <div class="box-scheduletable-title">
+                <p>课程表</p>
+            </div>
+            <div class="box-scheduletable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>星期一</th>
+                            <th>星期二</th>
+                            <th>星期三</th>
+                            <th>星期四</th>
+                            <th>星期五</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduletable">
+                        @for (int hour = 1; hour <= 12; hour++)
+                        {
+                            <tr>
+                                <td>@hour</td>
+                                @for (int day = 1; day <= 5; day++)
+                                {
+                                    string cellValue = "";
+                                    if (ViewBag.UserIdentity == "2") // 学生
+                                    {
+                                        foreach (var sc in Model.StudentCourse)
+                                        {
+                                            var teacherCourse = Model.TeacherCourse.FirstOrDefault(tc => tc.CourseNO == sc.CourseNO && tc.TeacherNum == sc.TeacherNum);
+                                            if (teacherCourse != null)
+                                            {
+                                                var times = teacherCourse.CourseTime.Split(new char[] { ',', '，' }, StringSplitOptions.RemoveEmptyEntries);
+                                                foreach (var time in times)
+                                                {
+                                                    if (time.StartsWith(GetChineseDayOfWeek(day)))
+                                                    {
+                                                        var hours = time.Substring(1).Split('-');
+                                                        if (hours.Length == 2)
+                                                        {
+                                                            int startHour = int.Parse(hours[0]);
+                                                            int endHour = int.Parse(hours[1]);
+                                                            if (hour >= startHour && hour <= endHour)
+                                                            {
+                                                                cellValue = ((char)('A' + Model.StudentCourse.IndexOf(sc))).ToString();
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (!string.IsNullOrEmpty(cellValue))
+                                            {
+                                                break;
+                                            }
+                                        }
+                                        
+                                    }
+                                    else if(ViewBag.UserIdentity == "1") // 教师
+									{
+                                        var index = 0;
+                                        foreach (var tc in Model.TeacherCourse)
+                                        {
+                                            var times = tc.CourseTime.Split(new char[] { ',', '，' }, StringSplitOptions.RemoveEmptyEntries);
+                                            foreach (var time in times)
+                                            {
+                                                if (time.StartsWith(GetChineseDayOfWeek(day)))
+                                                {
+                                                    var hours = time.Substring(1).Split('-');
+                                                    if (hours.Length == 2)
+                                                    {
+                                                        int startHour = int.Parse(hours[0]);
+                                                        int endHour = int.Parse(hours[1]);
+                                                        if (hour >= startHour && hour <= endHour)
+                                                        {
+                                                            cellValue = ((char)('A' + index)).ToString();
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            index++;
+                                            if (!string.IsNullOrEmpty(cellValue))
+                                            {
+                                                break;
+                                            }
+                                        }
+                                    }
+										
+
+                                    <td>@cellValue</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+@functions {
+    private string GetChineseDayOfWeek(int day)
+    {
+        return day switch
+        {
+            1 => "一",
+            2 => "二",
+            3 => "三",
+            4 => "四",
+            5 => "五",
+            _ => ""
+        };
+    }
+}

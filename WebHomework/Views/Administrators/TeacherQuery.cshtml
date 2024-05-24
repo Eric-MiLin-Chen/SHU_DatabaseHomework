@@ -1,0 +1,185 @@
+﻿@{
+    ViewData["Title"] = "开课课程查询";
+    Layout = "_AdministratorLayout"; 
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Administrator_TeacherQuery.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="article-item">
+        <div class="box-inquiry">
+            <div class="box-inquiry-title">
+                <p>课程查询</p>
+            </div>
+            <div class="box-inquiry-input">
+                <div class="box-inquiry-input-item">
+                    <p>课程号：</p>
+                    <input type="text" id="courseNo">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>课程名：</p>
+                    <input type="text" id="courseName">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>学分：</p>
+                    <input type="text" id="courseCredit">
+                </div>
+            </div>
+            <div class="box-inquiry-button">
+                <div><button id="courseInquiry" class="btn btn-primary">查询</button></div>
+            </div>
+        </div>
+        <div class="box-inquiryResult">
+            <div class="box-inquiryResult-title">
+                <p>查询结果</p>
+            </div>
+            <div class="box-inquiryResult-table">
+                <table>
+                    <thead>
+                        <tr id="inquiryTableTheadTr">
+                            <th>课程号</th>
+                            <th>课程名</th>
+                            <th>学分</th>
+                            <th>最大人数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseInquiryResult">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- 选择时间的模态框 -->
+    <div class="modal fade" id="selectTimeModal" tabindex="-1" role="dialog" aria-labelledby="selectTimeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="selectTimeModalLabel">选择开课时间</h5>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="courseNoInput">
+                    <div class="form-group">
+                        <label for="dayOfWeekSelect">选择星期几</label>
+                        <select class="form-control" id="dayOfWeekSelect">
+                            <option value="一">一</option>
+                            <option value="二">二</option>
+                            <option value="三">三</option>
+                            <option value="四">四</option>
+                            <option value="五">五</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="timePeriodSelect">选择时间</label>
+                        <select class="form-control" id="timePeriodSelect">
+                            <option value="1-2">1-2</option>
+                            <option value="3-4">3-4</option>
+                            <option value="5-6">5-6</option>
+                            <option value="7-8">7-8</option>
+                            <option value="9-10">9-10</option>
+                            <option value="11-12">11-12</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmSelectTime">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#courseInquiry').click(function () {
+                var courseNo = $('#courseNo').val();
+                var courseName = $('#courseName').val();
+                var courseCredit = $('#courseCredit').val();
+
+                $.ajax({
+                    url: '@Url.Action("TeacherQuery", "Administrators")',
+                    type: 'POST',
+                    data: {
+                        courseNo: courseNo,
+                        courseName: courseName,
+                        courseCredit: courseCredit,
+                    },
+                    success: function (data) {
+                        console.log(data); // 将返回的数据输出到控制台
+                        var tbody = $('#courseInquiryResult');
+                        tbody.empty();
+
+                        // 使用 Set 来跟踪已经显示的课程编号,防止重复输出
+                        var displayedCourses = new Set();
+
+                        $.each(data, function (index, item) {
+                            if (!displayedCourses.has(item.c.courseNO)) {
+                                displayedCourses.add(item.c.courseNO);
+
+                                var row = '<tr>' +
+                                    '<td>' + item.c.courseNO + '</td>' +
+                                    '<td>' + item.c.courseName + '</td>' +
+                                    '<td>' + item.c.credits + '</td>' +
+                                    '<td>' + item.c.maxStudentNum + '</td>' +
+                                    '<td><button class="btn btn-primary select-course" data-course-no="' + item.c.courseNO + '">开课</button></td>' +
+                                    '</tr>';
+                                tbody.append(row);
+                            }
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            // 为动态生成的开课按钮添加点击事件
+            $(document).on('click', '.select-course', function () {
+                var courseNo = $(this).data('course-no');
+                $('#courseNoInput').val(courseNo); // 设置隐藏的课程号输入框
+                $('#selectTimeModal').modal('show'); // 显示弹窗
+            });
+
+            // 在弹窗确认按钮点击时提交选择的时间
+            $('#confirmSelectTime').click(function () {
+                var courseNo = $('#courseNoInput').val();
+                var dayOfWeek = $('#dayOfWeekSelect').val();
+                var timePeriod = $('#timePeriodSelect').val();
+                var courseTime = dayOfWeek + timePeriod;
+
+                $.ajax({
+                    url: '@Url.Action("TeacherSelectCourse", "Administrators")',
+                    type: 'POST',
+                    data: {
+                        courseNo: courseNo,
+                        courseTime: courseTime
+                    },
+                    success: function (data) {
+                        alert(data.message);
+                        if (data.success) {
+                            location.reload(); // 刷新页面以显示最新的课程列表
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+
+                $('#selectTimeModal').modal('hide'); // 隐藏弹窗
+            });
+
+            $('.btn-secondary').click(function () {
+                $('#selectTimeModal').modal('hide');
+            });
+        });
+    </script>
+</body>
+</html>

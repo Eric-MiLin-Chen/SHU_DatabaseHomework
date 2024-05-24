@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - 管理员用户</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/AdministratorLayout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/WebHomework.styles.css" asp-append-version="true" />
+
+</head>
+<body>
+    <header class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light navbar-custom">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-end align-items-center">
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <li class="nav-item">
+                        <form>
+                            <p class="nav-link text-white">教务处</p>
+                        </form>
+                    </li>
+                    <li class="nav-item">
+                        <form asp-controller="Passwords" asp-action="Logout" method="post" class="d-inline">
+                            <button type="submit" class="nav-link btn btn-link text-white" style="padding: 0; cursor: pointer;">安全退出</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+    <div class="wrapper">
+        <div class="sidebar">
+            <div class="user-info">
+                <form id="usernoForm" method="post" action="@Url.Action("SetUserNo", "Administrators")">
+                    <input type="text" name="userno" placeholder="请输入学号/工号" />
+                    <button type="submit" class="btn btn-primary">确定</button>
+                </form>
+                <table>
+                    <tr>
+                        <td>学号/工号：</td>
+                        <td>@ViewBag.UserNo</td>
+                    </tr>
+                    <tr>
+                        <td>姓名：</td>
+                        <td>@ViewBag.UserName</td>
+                    </tr>
+                    <tr>
+                        <td>学院：</td>
+                        <td>@ViewBag.DepartmentName</td>
+                    </tr>
+                    <tr>
+                        <td>年级：</td>
+                        <td>@ViewBag.UserGrade</td>
+                    </tr>
+                    <tr>
+                        <td>性别：</td>
+                        <td>@ViewBag.Gender</td>
+                    </tr>
+                </table>
+                <p href="#" class="text-danger">完成选课后点击【安全退出】</p>
+            </div>
+            <hr>
+            <h4 class="px-3 d-flex justify-content-between align-items-center">
+                菜单
+            </h4>
+            <div class="collapse show" id="menuCollapse">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/Administrators/Query">选课课程查询</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/Administrators/Delete">删课</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/Administrators/Index">课表查询</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="content">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function setUserNo(event) {
+            event.preventDefault(); // 阻止表单默认提交
+            var form = event.target;
+            var formData = new FormData(form);
+            var userno = formData.get('userno');
+
+            $.ajax({
+                url: form.action,
+                type: form.method,
+                data: { userno: userno },
+                success: function () {
+                    location.reload(); // 成功后刷新页面
+                },
+                error: function () {
+                    alert('Failed to set UserNo');
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            $('#usernoForm').on('submit', setUserNo);
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

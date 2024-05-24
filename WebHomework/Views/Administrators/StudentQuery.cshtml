@@ -1,0 +1,146 @@
+﻿@{
+    ViewData["Title"] = "选课课程查询";
+    Layout = "_AdministratorLayout"; 
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/StudentCourses_Query.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="article-item">
+        <div class="box-inquiry">
+            <div class="box-inquiry-title">
+                <p>课程查询</p>
+            </div>
+            <div class="box-inquiry-input">
+                <div class="box-inquiry-input-item">
+                    <p>课程号：</p>
+                    <input type="text" id="courseNo">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>课程名：</p>
+                    <input type="text" id="courseName">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>学分：</p>
+                    <input type="text" id="courseCredit">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>教师号：</p>
+                    <input type="text" id="teacherNum">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>教师名：</p>
+                    <input type="text" id="teacherName">
+                </div>
+                <div class="box-inquiry-input-item">
+                    <p>上课时间：</p>
+                    <input type="text" id="courseTime">
+                </div>
+            </div>
+            <div class="box-inquiry-button">
+                <div><button id="courseInquiry" class="btn btn-primary">查询</button></div>
+            </div>
+        </div>
+        <div class="box-inquiryResult">
+            <div class="box-inquiryResult-title">
+                <p>查询结果</p>
+            </div>
+            <div class="box-inquiryResult-table">
+                <table>
+                    <thead>
+                        <tr id="inquiryTableTheadTr">
+                            <th>课程号</th>
+                            <th>课程名</th>
+                            <th>学分</th>
+                            <th>教师号</th>
+                            <th>教师名</th>
+                            <th>上课时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseInquiryResult">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#courseInquiry').click(function () {
+                var courseNo = $('#courseNo').val();
+                var courseName = $('#courseName').val();
+                var courseCredit = $('#courseCredit').val();
+                var teacherNum = $('#teacherNum').val();
+                var teacherName = $('#teacherName').val();
+                var courseTime = $('#courseTime').val();
+
+                $.ajax({
+                    url: '@Url.Action("StudentQuery", "Administrators")',
+                    type: 'POST',
+                    data: {
+                        courseNo: courseNo,
+                        courseName: courseName,
+                        courseCredit: courseCredit,
+                        teacherNum: teacherNum,
+                        teacherName: teacherName,
+                        courseTime: courseTime
+                    },
+                    success: function (data) {
+                        console.log(data); // 将返回的数据输出到控制台
+                        var tbody = $('#courseInquiryResult');
+                        tbody.empty();
+                        $.each(data, function (index, item) {
+                            var row = '<tr>' +
+                                '<td>' + item.c.courseNO + '</td>' +
+                                '<td>' + item.c.courseName + '</td>' +
+                                '<td>' + item.c.credits + '</td>' +
+                                '<td>' + item.tc.teacherNum + '</td>' +
+                                '<td>' + item.t.teacherName + '</td>' +
+                                '<td>' + item.tc.courseTime + '</td>' +
+                                '<td><button class="btn btn-primary select-course" data-course-no="' + item.tc.courseNO + '" data-teacher-num="' + item.tc.teacherNum + '">选课</button></td>' +
+                                '</tr>';
+                            tbody.append(row);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            // 为动态生成的选课按钮添加点击事件
+            $(document).on('click', '.select-course', function () {
+                var courseNo = $(this).data('course-no');
+                var teacherNum = $(this).data('teacher-num');
+
+                $.ajax({
+                    url: '@Url.Action("StudentSelectCourse", "Administrators")',
+                    type: 'POST',
+                    data: {
+                        courseNo: courseNo,
+                        teacherNum: teacherNum
+                    },
+                    success: function (data) {
+                        alert(data.message);
+                        if (data.success) {
+                            location.reload(); // 刷新页面以显示最新的课程列表
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+﻿.box-schedule {
+    width: 98%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: #000 2px solid;
+    margin: 1%;
+    overflow-y: auto;
+}
+
+.box-schedule-title {
+    width: 100%;
+    text-align: center;
+    background-color: #b3b3b3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 1.7vw;
+}
+
+.box-schedule-table {
+    width: 100%;
+    flex-grow: 1;
+    background-color: #fbf9f9;
+}
+
+    .box-schedule-table table {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-collapse: collapse; /* 确保表格边框不会重复显示 */
+    }
+
+        .box-schedule-table table th, .box-schedule-table table td {
+            border: none; /* 移除表格单元格的边框 */
+            padding: 0; /* 移除内边距 */
+            margin: 0; /* 移除外边距 */
+            box-shadow: none; /* 移除阴影效果 */
+        }
+
+        .box-schedule-table table thead {
+            width: 100%;
+            height: auto;
+        }
+
+        .box-schedule-table table tbody {
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+            .box-schedule-table table tbody::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            .box-schedule-table table tbody::-webkit-scrollbar-thumb {
+                background-color: #888;
+                border-radius: 10px;
+            }
+
+            .box-schedule-table table tbody::-webkit-scrollbar-track {
+                background-color: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .box-schedule-table table tbody tr:nth-child(odd) {
+                background-color: #ddd;
+            }
+
+        .box-schedule-table table tr {
+            width: 100%;
+            height: 6vh;
+            display: flex;
+            background-color: #f0efef;
+            flex-direction: row;
+            justify-self: center;
+            align-items: center;
+            box-sizing: border-box; /* 确保高度和边框内边距一致 */
+        }
+
+        .box-schedule-table table thead tr th,
+        .box-schedule-table table tbody tr td {
+            width: 20%;
+            text-align: center;
+        }

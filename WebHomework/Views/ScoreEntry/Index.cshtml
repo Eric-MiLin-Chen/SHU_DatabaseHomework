@@ -1,0 +1,122 @@
+﻿@model WebHomework.Models.ScoreEntryViewModel
+@{
+    ViewData["Title"] = "成绩录入";
+    Layout = "_TeacherLayout";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ScoreEntry_Index.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="article-item">
+        <div class="box-scoreEntry">
+            <div class="box-scoreEntry-title">
+                <p>成绩录入</p>
+            </div>
+            <div class="box-scoreEntrySelect-table">
+                <table>
+                    <thead>
+                        <tr id="scoreEntrySelectTableTheadTr">
+                            <th>课程号</th>
+                            <th>课程名</th>
+                            <th>上课时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseScoreEntrySelect">
+                        @foreach (var course in Model.TeacherCourse)
+                        {
+                            var courseName = Model.Course.FirstOrDefault(c => c.CourseNO == course.CourseNO)?.CourseName;
+                            <tr>
+                                <td>@course.CourseNO</td>
+                                <td>@courseName</td>
+                                <td>@course.CourseTime</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm" onclick="loadScores('@course.CourseNO')">录入成绩</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="box-scoreEntryResult">
+            <div class="box-scoreEntryResult-title">
+                <p>学生成绩</p>
+            </div>
+            <div class="box-scoreEntryResult-table">
+                <table>
+                    <thead>
+                        <tr id="scoreEntryTableTheadTr">
+                            <th>学号</th>
+                            <th>姓名</th>
+                            <th>成绩</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courseScoreEntryResult">
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-scoreEntry-button">
+                <div><button class="btn btn-primary btn-sm" id="scoreEntry" onclick="submitScores()">录入</button></div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function loadScores(courseNo) {
+            $.getJSON('@Url.Action("GetStudentScores", "ScoreEntry")', { courseNo: courseNo }, function (data) {
+                var tbody = $('#courseScoreEntryResult');
+                tbody.empty();
+                data.forEach(function (item) {
+                    tbody.append('<tr data-course-no="' + courseNo + '"><td>' + item.studentNO + '</td><td>' + item.studentName + '</td><td><input type="text" value="' + item.score + '" /></td></tr>');
+                });
+            });
+        }
+
+
+        function submitScores() {
+            var rows = $('#courseScoreEntryResult tr');
+            var studentCourses = [];
+
+            rows.each(function () {
+                var studentNo = $(this).find('td:eq(0)').text();
+                var score = $(this).find('td:eq(2) input').val();
+                var courseNo = $(this).data('course-no'); // 从当前行的data-course-no属性中获取CourseNO
+
+                studentCourses.push({
+                    StudentNO: studentNo,
+                    CourseNO: courseNo,
+                    Score: score
+                });
+            });
+
+            console.log("Submitting scores:", studentCourses); // 添加调试信息
+
+            $.ajax({
+                url: '@Url.Action("SubmitScores", "ScoreEntry")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(studentCourses),
+                success: function () {
+                    location.reload();
+                    alert('成绩录入成功');
+                },
+                error: function () {
+                    alert('成绩录入失败');
+                }
+            });
+        }
+
+
+        
+    </script>
+</body>
+</html>
